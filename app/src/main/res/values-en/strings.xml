@@ -1,0 +1,49 @@
+<resources>
+    <!-- App Info -->
+    <string name="app_name">MV11</string>
+    
+    <!-- Intro Fragment -->
+    <string name="intro_title">Welcome to App</string>
+    <string name="btn_login">Login</string>
+    <string name="btn_signup">Sign Up</string>
+    
+    <!-- Login Fragment -->
+    <string name="login_title">Welcome to App</string>
+    <string name="login_subtitle">Log in to your account</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="btn_login_submit">Log In</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="signup_link">Sign Up</string>
+    <string name="toast_enter_email">Please enter email</string>
+    <string name="toast_enter_password">Please enter password</string>
+    <string name="toast_login_success">Login successful!</string>
+    <string name="toast_forgot_not_implemented">\'Forgot password\' feature not implemented yet</string>
+    
+    <!-- Signup Fragment -->
+    <string name="signup_title">Sign Up</string>
+    <string name="label_name">Name:</string>
+    <string name="label_email">Email:</string>
+    <string name="hint_name">Your name</string>
+    <string name="hint_email_placeholder">your@email.com</string>
+    <string name="btn_register">Register</string>
+    
+    <!-- Profile Fragment -->
+    <string name="profile_title">User Profile</string>
+    <string name="profile_subtitle">Your personal information</string>
+    
+    <!-- Feed Fragment -->
+    <string name="feed_title">List</string>
+    <string name="feed_subtitle">Current offers and products</string>
+    <string name="feed_item_image">Item image</string>
+    
+    <!-- Map Fragment -->
+    <string name="map_title">User Map</string>
+    
+    <!-- Navigation -->
+    <string name="nav_map">Map</string>
+    <string name="nav_list">List</string>
+    <string name="nav_profile">Profile</string>
+</resources>
+

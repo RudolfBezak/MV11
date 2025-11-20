@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <!-- Title Style -->
+    <style name="AppTitle">
+        <item name="android:textSize">28sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/primary_blue</item>
+    </style>
+    
+    <!-- Subtitle Style -->
+    <style name="AppSubtitle">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+    
+    <!-- Primary Button -->
+    <style name="PrimaryButton" parent="Widget.Material3.Button">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="backgroundTint">@color/primary_blue</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+    
+    <!-- Secondary Button (Yellow) -->
+    <style name="SecondaryButton" parent="Widget.Material3.Button">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/primary_blue</item>
+        <item name="backgroundTint">@color/secondary_yellow</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+    
+    <!-- Accent Button (Red) -->
+    <style name="AccentButton" parent="Widget.Material3.Button">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="backgroundTint">@color/accent_red</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+    
+    <!-- Card Style -->
+    <style name="AppCard" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardBackgroundColor">@color/white</item>
+    </style>
+    
+</resources>
+
+

@@ -1,0 +1,49 @@
+<resources>
+    <!-- App Info -->
+    <string name="app_name">MV11</string>
+    <string name="mapbox_access_token">pk.eyJ1IjoibnV0ZWxhazEyMyIsImEiOiJjbWd4cWEzMHcxNjBjMmtzOGdxMXU2OGhyIn0.0yvA2-zQu--1RvXr3C7c2w</string>
+    
+    <!-- Intro Fragment -->
+    <string name="intro_title">Vitajte v aplikácii</string>
+    <string name="btn_login">Prihlásenie</string>
+    <string name="btn_signup">Registrácia</string>
+    
+    <!-- Login Fragment -->
+    <string name="login_title">Vitajte v Appke</string>
+    <string name="login_subtitle">Prihláste sa do svojho účtu</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Heslo</string>
+    <string name="forgot_password">Zabudli ste heslo?</string>
+    <string name="btn_login_submit">Prihlásiť sa</string>
+    <string name="no_account">Nemáte účet?</string>
+    <string name="signup_link">Zaregistrujte sa</string>
+    <string name="toast_enter_email">Zadajte email</string>
+    <string name="toast_enter_password">Zadajte heslo</string>
+    <string name="toast_login_success">Prihlásenie úspešné!</string>
+    <string name="toast_forgot_not_implemented">Funkcia \'Zabudnuté heslo\' zatiaľ nie je implementovaná</string>
+    
+    <!-- Signup Fragment -->
+    <string name="signup_title">Registrácia</string>
+    <string name="label_name">Meno:</string>
+    <string name="label_email">Email:</string>
+    <string name="hint_name">Vaše meno</string>
+    <string name="hint_email_placeholder">vas@email.com</string>
+    <string name="btn_register">Zaregistrovať sa</string>
+    
+    <!-- Profile Fragment -->
+    <string name="profile_title">Profil používateľa</string>
+    <string name="profile_subtitle">Vaše osobné údaje</string>
+    
+    <!-- Feed Fragment -->
+    <string name="feed_title">Zoznam</string>
+    <string name="feed_subtitle">Aktuálne ponuky a produkty</string>
+    <string name="feed_item_image">Obrázok položky</string>
+    
+    <!-- Map Fragment -->
+    <string name="map_title">Mapa používateľov</string>
+    
+    <!-- Navigation -->
+    <string name="nav_map">Mapa</string>
+    <string name="nav_list">Zoznam</string>
+    <string name="nav_profile">Profil</string>
+</resources>

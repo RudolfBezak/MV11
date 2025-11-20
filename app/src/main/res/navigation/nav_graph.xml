@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@+id/introFragment">
+
+    <fragment
+        android:id="@+id/introFragment"
+        android:name="com.example.mv11.IntroFragment"
+        android:label="Intro">
+
+        <action
+            android:id="@+id/action_intro_to_prihlasenie"
+            app:destination="@id/prihlasenieFragment" />
+
+        <action
+            android:id="@+id/action_intro_to_signup"
+            app:destination="@id/signupFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/prihlasenieFragment"
+        android:name="com.example.mv11.PrihlasenieFragment"
+        android:label="Prihlásenie">
+
+        <action
+            android:id="@+id/action_prihlasenie_to_signup"
+            app:destination="@id/signupFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/signupFragment"
+        android:name="com.example.mv11.SignupFragment"
+        android:label="Registrácia">
+
+        <action
+            android:id="@+id/action_signup_to_intro"
+            app:destination="@id/introFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/feedFragment"
+        android:name="com.example.mv11.FeedFragment"
+        android:label="Feed">
+    </fragment>
+
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.example.mv11.MapFragment"
+        android:label="Mapa">
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.mv11.ProfileFragment"
+        android:label="Profil">
+    </fragment>
+
+    <fragment
+        android:id="@+id/numberFragment"
+        android:name="com.example.mv11.NumberFragment"
+        android:label="Random Number">
+    </fragment>
+
+</navigation>

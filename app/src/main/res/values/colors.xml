@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- App Brand Colors -->
+    <color name="primary_blue">#0050AA</color>
+    <color name="primary_blue_dark">#003D80</color>
+    <color name="primary_blue_light">#3375C2</color>
+    
+    <color name="accent_red">#EC0016</color>
+    <color name="secondary_yellow">#FFD500</color>
+    
+    <!-- Background Colors -->
+    <color name="background_light">#F5F5F5</color>
+    <color name="background_white">#FFFFFF</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_on_primary">#FFFFFF</color>
+</resources>

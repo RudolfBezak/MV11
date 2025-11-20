@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottomNavigationContainer"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:background="@color/primary_blue"
+    android:elevation="8dp">
+
+    <ImageView
+        android:id="@+id/btnNavMap"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:contentDescription="@string/nav_map"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/map_foreground"
+        android:background="?attr/selectableItemBackground"
+        app:tint="@color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnNavList"
+        app:layout_constraintHorizontal_chainStyle="spread" />
+
+    <ImageView
+        android:id="@+id/btnNavList"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:contentDescription="@string/nav_list"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/file_foreground"
+        android:background="?attr/selectableItemBackground"
+        app:tint="@color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btnNavMap"
+        app:layout_constraintEnd_toStartOf="@+id/btnNavProfile" />
+
+    <ImageView
+        android:id="@+id/btnNavProfile"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:contentDescription="@string/nav_profile"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/profile_foreground"
+        android:background="?attr/selectableItemBackground"
+        app:tint="@color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btnNavList"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
