@@ -78,6 +78,27 @@ class PreferenceData private constructor() {
         return User.fromJson(json)
     }
 
+    /**
+     * Aktualizuje access a refresh tokeny v uloženom User objekte.
+     * Používa sa po úspešnom obnovení tokenu.
+     * 
+     * @param context - kontext aplikácie
+     * @param newAccessToken - nový access token
+     * @param newRefreshToken - nový refresh token
+     */
+    fun updateTokens(context: Context?, newAccessToken: String, newRefreshToken: String) {
+        val currentUser = getUser(context) ?: return
+        
+        // Vytvor nový User s novými tokenmi
+        val updatedUser = currentUser.copy(
+            access = newAccessToken,
+            refresh = newRefreshToken
+        )
+        
+        // Ulož späť do SharedPreferences
+        putUser(context, updatedUser)
+    }
+
     companion object {
         /**
          * Singleton inštancia PreferenceData.
@@ -113,6 +134,35 @@ class PreferenceData private constructor() {
          * Kľúč pre uloženie User objektu v SharedPreferences.
          */
         private const val userKey = "userKey"
+
+        /**
+         * Kľúč pre uloženie sharing location stavu v SharedPreferences.
+         */
+        private const val sharingLocationKey = "sharingLocationKey"
+    }
+
+    /**
+     * Uloží stav zdieľania polohy do SharedPreferences.
+     * 
+     * @param context - kontext aplikácie
+     * @param sharing - true ak používateľ zdieľa polohu, false ak nie
+     */
+    fun putSharing(context: Context?, sharing: Boolean) {
+        val sharedPref = getSharedPreferences(context) ?: return
+        val editor = sharedPref.edit()
+        editor.putBoolean(sharingLocationKey, sharing)
+        editor.apply()
+    }
+
+    /**
+     * Načíta stav zdieľania polohy z SharedPreferences.
+     * 
+     * @param context - kontext aplikácie
+     * @return true ak používateľ zdieľa polohu, false ak nie, alebo false ak nie je uložené
+     */
+    fun getSharing(context: Context?): Boolean {
+        val sharedPref = getSharedPreferences(context) ?: return false
+        return sharedPref.getBoolean(sharingLocationKey, false)
     }
 }
 

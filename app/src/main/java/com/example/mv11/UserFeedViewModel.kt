@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
  * 
  * @param repository - DataRepository pre prístup k dátam
  */
-class UserFeedViewModel(private val repository: DataRepository) : ViewModel() {
+class UserFeedViewModel(val repository: DataRepository) : ViewModel() {
 
     /**
      * LiveData so zoznamom používateľov - OFFLINE-FIRST PATTERN.
@@ -58,9 +58,9 @@ class UserFeedViewModel(private val repository: DataRepository) : ViewModel() {
             val source = repository.getUsers()
             emitSource(source)
             
-            // KROK 2: V pozadí načítaj fresh dáta z API
+            // KROK 2: V pozadí načítaj fresh dáta z geofence API
             loading.postValue(true)
-            repository.apiListGeofence()  // Stiahne z API → uloží do DB
+            repository.apiListGeofenceLocations()  // Stiahne z geofence/list.php → uloží do DB
             loading.postValue(false)
             
             // KROK 3: emitSource už sleduje DB, takže UI sa automaticky aktualizuje!
@@ -93,11 +93,17 @@ class UserFeedViewModel(private val repository: DataRepository) : ViewModel() {
      * 
      * Evento() - zabalí správu do jednorazovej udalosti
      */
+    /**
+     * Manuálne obnovenie dát z geofence API.
+     * Používa sa keď používateľ klikne na refresh button alebo pull-to-refresh.
+     * 
+     * @return String - error message alebo prázdny string pri úspechu
+     */
     fun updateItems() {
         viewModelScope.launch {  // Spustiť asynchrónnu operáciu
             loading.postValue(true)
-            val errorMessage = repository.apiListGeofence()  // Vráti error alebo prázdny string
-            _message.postValue(Evento(errorMessage))         // Poslať správu do UI
+            val (errorMessage, _) = repository.apiListGeofenceLocations()  // Vráti Pair<String, List<GeofenceResponse>?>
+            _message.postValue(Evento(errorMessage ?: ""))         // Poslať správu do UI
             loading.postValue(false)
         }
     }

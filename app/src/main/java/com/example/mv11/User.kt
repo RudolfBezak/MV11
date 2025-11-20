@@ -18,7 +18,8 @@ data class User(
     val email: String,
     val uid: String,
     val access: String,
-    val refresh: String
+    val refresh: String,
+    val photo: String = ""
 ) {
     /**
      * Konvertuje User objekt na JSON string.
@@ -74,5 +75,57 @@ data class UserResponse(
     val lon: Double,
     val radius: Double,
     val photo: String = ""
+)
+
+/**
+ * RefreshTokenRequest - request body pre obnovenie access tokenu.
+ * 
+ * @param refresh - refresh token získaný pri registrácii/prihlásení
+ */
+data class RefreshTokenRequest(
+    val refresh: String
+)
+
+/**
+ * RefreshTokenResponse - odpoveď z API pri obnovení tokenu.
+ * 
+ * @param access - nový access token
+ * @param refresh - nový refresh token (môže byť rovnaký alebo nový)
+ */
+data class RefreshTokenResponse(
+    val access: String,
+    val refresh: String
+)
+
+/**
+ * GeofenceUpdateRequest - request body pre odoslanie polohy.
+ * 
+ * @param lat - zemepisná šírka (latitude)
+ * @param lon - zemepisná dĺžka (longitude)
+ * @param radius - polomer geofence oblasti v metroch
+ */
+data class GeofenceUpdateRequest(
+    val lat: Double,
+    val lon: Double,
+    val radius: Double
+)
+
+/**
+ * GeofenceResponse - odpoveď z geofence API.
+ * 
+ * @param uid - uid používateľa
+ * @param name - meno používateľa
+ * @param lat - zemepisná šírka
+ * @param lon - zemepisná dĺžka
+ * @param radius - polomer geofence
+ * @param updated - dátum a čas aktualizácie
+ */
+data class GeofenceResponse(
+    val uid: String,
+    val name: String,
+    val lat: Double,
+    val lon: Double,
+    val radius: Double,
+    val updated: String
 )
 

@@ -19,7 +19,7 @@ class DataRepository private constructor(
         fun getInstance(context: Context): DataRepository =
             INSTANCE ?: synchronized(lock) {
                 INSTANCE ?: DataRepository(
-                    ApiService.create(),
+                    ApiService.create(context),  // ← Pridá Context pre interceptory
                     LocalCache(AppRoomDatabase.getInstance(context).appDao())
                 ).also { INSTANCE = it }
             }
@@ -52,7 +52,7 @@ class DataRepository private constructor(
                 
                 if (body != null) {
                     Log.d(TAG, "User created successfully: uid=${body.uid}")
-                    return Pair("", User(username, email, body.uid, body.access, body.refresh))
+                    return Pair("", User(username, email, body.uid, body.access, body.refresh, ""))
                 } else {
                     Log.e(TAG, "Response body is null")
                     return Pair("Server returned empty response", null)
@@ -84,7 +84,8 @@ class DataRepository private constructor(
         
         try {
             Log.d(TAG, "Fetching users from API")
-            val response = service.listGeofence(API_KEY)
+            // Token a API key sa pridajú automaticky cez AuthInterceptor
+            val response = service.listGeofence()
             Log.d(TAG, "Response code: ${response.code()}")
 
             if (response.isSuccessful) {
@@ -120,5 +121,173 @@ class DataRepository private constructor(
     }
 
     fun getUsers() = cache.getUsers()
+
+    /**
+     * Získa údaje o používateľovi z API.
+     * 
+     * Token sa pridá automaticky cez AuthInterceptor.
+     * Ak token expiroval (401), TokenAuthenticator ho automaticky obnoví.
+     * 
+     * @param uid - uid používateľa ktorého chceme získať
+     * @return Pair<String, User?> - error message a User objekt (alebo null pri chybe)
+     */
+    suspend fun apiGetUser(uid: String): Pair<String, User?> {
+        try {
+            Log.d(TAG, "Fetching user with uid: $uid")
+            
+            // Token sa pridá automaticky cez AuthInterceptor
+            // Ak expiroval, TokenAuthenticator ho automaticky obnoví
+            val response = service.getUser(uid)
+
+            Log.d(TAG, "GetUser response code: ${response.code()}")
+
+            if (response.isSuccessful) {
+                response.body()?.let { userResponse ->
+                    Log.d(TAG, "User loaded successfully: ${userResponse.name}")
+                    
+                    // Získaj aktuálne tokeny z SharedPreferences (môžu byť obnovené)
+                    val currentUser = PreferenceData.getInstance().getUser(null)
+                    
+                    return Pair(
+                        "",
+                        User(
+                            userResponse.name,
+                            currentUser?.email ?: "",  // Email z SharedPreferences
+                            userResponse.uid,
+                            currentUser?.access ?: "",  // Aktuálny access token (môže byť obnovený)
+                            currentUser?.refresh ?: "",  // Aktuálny refresh token
+                            userResponse.photo
+                        )
+                    )
+                }
+            }
+
+            Log.e(TAG, "Failed to load user: ${response.message()} (code: ${response.code()})")
+            return Pair("Failed to load user", null)
+            
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Check internet connection. Failed to load user.", null)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+        }
+        return Pair("Fatal error. Failed to load user.", null)
+    }
+
+    /**
+     * Odosle aktuálnu polohu používateľa na server.
+     * 
+     * @param lat - zemepisná šírka (latitude)
+     * @param lon - zemepisná dĺžka (longitude)
+     * @param radius - polomer geofence oblasti v metroch
+     * @return String - error message alebo prázdny string pri úspechu
+     */
+    suspend fun apiUpdateGeofence(lat: Double, lon: Double, radius: Double): String {
+        try {
+            Log.d(TAG, "Updating geofence: lat=$lat, lon=$lon, radius=$radius")
+            
+            val response = service.updateGeofence(
+                GeofenceUpdateRequest(lat, lon, radius)
+            )
+            
+            Log.d(TAG, "UpdateGeofence response code: ${response.code()}")
+            
+            if (response.isSuccessful) {
+                Log.d(TAG, "Geofence updated successfully")
+                return ""
+            }
+            
+            Log.e(TAG, "Failed to update geofence: ${response.message()} (code: ${response.code()})")
+            return "Failed to update location"
+            
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return "Check internet connection. Failed to update location."
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+        }
+        return "Fatal error. Failed to update location."
+    }
+
+    /**
+     * Odstráni polohu používateľa zo servera.
+     * 
+     * @return String - error message alebo prázdny string pri úspechu
+     */
+    suspend fun apiDeleteGeofence(): String {
+        try {
+            Log.d(TAG, "Deleting geofence")
+            
+            val response = service.deleteGeofence()
+            
+            Log.d(TAG, "DeleteGeofence response code: ${response.code()}")
+            
+            if (response.isSuccessful) {
+                Log.d(TAG, "Geofence deleted successfully")
+                return ""
+            }
+            
+            Log.e(TAG, "Failed to delete geofence: ${response.message()} (code: ${response.code()})")
+            return "Failed to delete location"
+            
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return "Check internet connection. Failed to delete location."
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+        }
+        return "Fatal error. Failed to delete location."
+    }
+
+    /**
+     * Získa zoznam všetkých polôh používateľov (vrátane vlastnej).
+     * 
+     * @return Pair<String, List<GeofenceResponse>?> - error message a zoznam polôh (alebo null pri chybe)
+     */
+    suspend fun apiListGeofenceLocations(): Pair<String, List<GeofenceResponse>?> {
+        try {
+            Log.d(TAG, "Fetching geofence locations from API")
+            
+            val response = service.listGeofence()
+            
+            Log.d(TAG, "ListGeofence response code: ${response.code()}")
+            
+            if (response.isSuccessful) {
+                response.body()?.let { locations ->
+                    Log.d(TAG, "Received ${locations.size} geofence locations from API")
+                    
+                    // Konvertuj GeofenceResponse na UserEntity a ulož do databázy
+                    val users = locations.map {
+                        UserEntity(
+                            it.uid, it.name, it.updated,
+                            it.lat, it.lon, it.radius, ""
+                        )
+                    }
+                    cache.insertUserItems(users)
+                    Log.d(TAG, "Geofence locations saved to database")
+                    
+                    return Pair("", locations)
+                }
+            }
+            
+            Log.e(TAG, "Failed to load geofence locations: ${response.message()} (code: ${response.code()})")
+            return Pair("Failed to load locations", null)
+            
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Check internet connection. Failed to load locations.", null)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+        }
+        return Pair("Fatal error. Failed to load locations.", null)
+    }
 }
 

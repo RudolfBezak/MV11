@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/secondary_yellow">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- DataBinding: Definuje premenné dostupné v layoute -->
+    <data>
+        <!-- ViewModel premenná - umožňuje prístup k dátam a metódam ViewModelu -->
+        <variable
+            name="viewModel"
+            type="com.example.mv11.FeedViewModel" />
+    </data>
+
+    <!-- Pôvodný layout (ConstraintLayout) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/secondary_yellow">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/contentContainer"
@@ -39,15 +50,57 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="8dp"/>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/feed_recyclerview"
+        <!-- JEDNOSMERNÝ DATABINDING (One-way) -->
+        <!-- @{ } syntax - dáta tečú z ViewModelu do UI -->
+        <!-- Zmeny v displayText sa automaticky zobrazia v TextView -->
+        <TextView
+            android:id="@+id/tvDisplayText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.displayText}"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:padding="16dp"
+            android:background="@color/white"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/tvSubtitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <!-- OBOJSMERNÝ DATABINDING (Two-way) -->
+        <!-- @={ } syntax - dáta tečú v oboch smeroch -->
+        <!-- Zmeny v EditText sa automaticky synchronizujú s viewModel.userInput -->
+        <!-- Zmeny v viewModel.userInput sa automaticky zobrazia v EditText -->
+        <EditText
+            android:id="@+id/etUserInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Zadajte text..."
+            android:text="@={viewModel.userInput}"
+            android:padding="16dp"
+            android:background="@color/white"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/tvDisplayText"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <!-- SwipeRefreshLayout pre pull-to-refresh -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginTop="24dp"
-            app:layout_constraintTop_toBottomOf="@id/tvSubtitle"
+            app:layout_constraintTop_toBottomOf="@id/etUserInput"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/feed_recyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <LinearLayout
         android:id="@+id/buttonContainer"
@@ -63,18 +116,51 @@
               android:layout_height="wrap_content"
               android:gravity="center"
               android:orientation="horizontal">
-              <Button android:id="@+id/btnAdd" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pridať"/>
-              <Button android:id="@+id/btnRemove" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Odobrať"/>
-              <Button android:id="@+id/btnChange" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Zmeniť 1"/>
+              <!-- CLICK EVENTY V XML -->
+              <!-- android:onClick="@{() -> viewModel.method()}" -->
+              <!-- Metóda sa zavolá pri kliknutí na Button -->
+              <Button 
+                  android:id="@+id/btnAdd" 
+                  android:layout_width="wrap_content" 
+                  android:layout_height="wrap_content" 
+                  android:text="Pridať"
+                  android:onClick="@{() -> viewModel.onAddButtonClick()}"/>
+              <Button 
+                  android:id="@+id/btnRemove" 
+                  android:layout_width="wrap_content" 
+                  android:layout_height="wrap_content" 
+                  android:text="Odobrať"
+                  android:onClick="@{() -> viewModel.onRemoveButtonClick()}"/>
+              <Button 
+                  android:id="@+id/btnChange" 
+                  android:layout_width="wrap_content" 
+                  android:layout_height="wrap_content" 
+                  android:text="Zmeniť 1"
+                  android:onClick="@{() -> viewModel.onChangeButtonClick()}"/>
           </LinearLayout>
           <LinearLayout
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:gravity="center"
               android:orientation="horizontal">
-              <Button android:id="@+id/btnChangeRange" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Zmeniť 2"/>
-              <Button android:id="@+id/btnReset" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Reset"/>
-              <Button android:id="@+id/btnCoroutines" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Coroutines"/>
+              <Button 
+                  android:id="@+id/btnChangeRange" 
+                  android:layout_width="wrap_content" 
+                  android:layout_height="wrap_content" 
+                  android:text="Zmeniť 2"
+                  android:onClick="@{() -> viewModel.onChangeRangeButtonClick()}"/>
+              <Button 
+                  android:id="@+id/btnReset" 
+                  android:layout_width="wrap_content" 
+                  android:layout_height="wrap_content" 
+                  android:text="Reset"
+                  android:onClick="@{() -> viewModel.onResetButtonClick()}"/>
+              <!-- Tento Button ešte používa onClick v kóde (pre navigáciu) -->
+              <Button 
+                  android:id="@+id/btnCoroutines" 
+                  android:layout_width="wrap_content" 
+                  android:layout_height="wrap_content" 
+                  android:text="Coroutines"/>
           </LinearLayout>
 
       </LinearLayout>
@@ -89,4 +175,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
