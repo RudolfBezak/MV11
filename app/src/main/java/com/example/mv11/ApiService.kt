@@ -16,10 +16,22 @@ interface ApiService {
         @Body userInfo: UserRegistration
     ): Response<RegistrationResponse>
 
-    @retrofit2.http.GET("user/list.php")
+    @POST("user/login.php")
+    suspend fun loginUser(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @Body loginInfo: UserLogin
+    ): Response<RegistrationResponse>
+
+    @retrofit2.http.GET("user")
     suspend fun listGeofence(
         @retrofit2.http.Header("x-apikey") apiKey: String
     ): Response<List<UserResponse>>
+
+    @POST("users/logout")
+    suspend fun logout(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @retrofit2.http.Header("Authorization") accessToken: String
+    ): Response<Void>
 
     companion object {
         fun create(): ApiService {

@@ -34,28 +34,40 @@ class SignupFragment : Fragment() {
             }
         })[AuthViewModel::class.java]
 
-        viewModel.registrationResult.observe(viewLifecycleOwner) {
-            if (it.second != null) {
-                val user = it.second
-                Log.d("SignupFragment", "Registration successful: $user")
-                
-                // Uložiť používateľa do SharedPreferences
-                PreferenceData.getInstance().putUser(context, user)
-                Log.d("SignupFragment", "User saved to SharedPreferences")
-                
-                Snackbar.make(
-                    view.findViewById(R.id.submitButton),
-                    "Registration successful!",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-                findNavController().navigate(R.id.feedFragment)
-            } else {
-                Log.e("SignupFragment", "Registration failed: ${it.first}")
-                Snackbar.make(
-                    view.findViewById(R.id.submitButton),
-                    it.first,
-                    Snackbar.LENGTH_SHORT
-                ).show()
+        viewModel.registrationResult.observe(viewLifecycleOwner) { evento ->
+            evento.getContentIfNotHandled()?.let { result ->
+                result.second?.let { user ->
+                    Log.d("SignupFragment", "Registration successful: $user")
+                    Log.d("SignupFragment", "Access token: ${user.access}, length: ${user.access.length}")
+                    Log.d("SignupFragment", "Refresh token: ${user.refresh}, length: ${user.refresh.length}")
+
+                    if (user.access.isNotEmpty()) {
+                        PreferenceData.getInstance().putUser(context, user)
+                        Log.d("SignupFragment", "User saved to SharedPreferences with access token")
+                        
+                        Snackbar.make(
+                            view.findViewById(R.id.submitButton),
+                            "Registration successful!",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                        findNavController().navigate(R.id.feedFragment)
+                    } else {
+                        Log.w("SignupFragment", "Access token is empty after registration")
+                        Snackbar.make(
+                            view.findViewById(R.id.submitButton),
+                            "Registration successful! Please login to continue.",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                        findNavController().navigate(R.id.prihlasenieFragment)
+                    }
+                } ?: run {
+                    Log.e("SignupFragment", "Registration failed: ${result.first}")
+                    Snackbar.make(
+                        view.findViewById(R.id.submitButton),
+                        result.first,
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
 

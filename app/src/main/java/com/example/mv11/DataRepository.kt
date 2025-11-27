@@ -73,6 +73,53 @@ class DataRepository private constructor(
         }
     }
 
+    suspend fun apiLoginUser(email: String, password: String): Pair<String, User?> {
+        if (email.isEmpty()) {
+            Log.e(TAG, "Email is empty")
+            return Pair("Email can not be empty", null)
+        }
+        if (password.isEmpty()) {
+            Log.e(TAG, "Password is empty")
+            return Pair("Password can not be empty", null)
+        }
+        try {
+            Log.d(TAG, "Sending login request for email: $email")
+            Log.d(TAG, "Using API key: $API_KEY")
+            val response = service.loginUser(API_KEY, UserLogin(email, password))
+            Log.d(TAG, "Response code: ${response.code()}")
+            Log.d(TAG, "Response message: ${response.message()}")
+            Log.d(TAG, "Response isSuccessful: ${response.isSuccessful}")
+            
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+                
+                if (body != null) {
+                    Log.d(TAG, "Login successful: uid=${body.uid}")
+                    Log.d(TAG, "Access token from API: ${body.access}, length: ${body.access.length}")
+                    Log.d(TAG, "Refresh token from API: ${body.refresh}, length: ${body.refresh.length}")
+                    val username = email.substringBefore("@")
+                    return Pair("", User(username, email, body.uid, body.access, body.refresh))
+                } else {
+                    Log.e(TAG, "Response body is null")
+                    return Pair("Server returned empty response", null)
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Failed to login: ${response.message()}", null)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Check internet connection. Failed to login.", null)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Error: ${ex.message}", null)
+        }
+    }
+
     suspend fun apiListGeofence(useMockData: Boolean = false): String {
         if (useMockData) {
             Log.d(TAG, "Using mock data for testing")
@@ -117,6 +164,35 @@ class DataRepository private constructor(
             ex.printStackTrace()
         }
         return "Fatal error. Failed to load users."
+    }
+
+    suspend fun apiLogout(accessToken: String): Pair<String, Boolean> {
+        try {
+            Log.d(TAG, "Sending logout request")
+            Log.d(TAG, "Using API key: $API_KEY")
+            val authHeader = "Bearer $accessToken"
+            val response = service.logout(API_KEY, authHeader)
+            Log.d(TAG, "Logout response code: ${response.code()}")
+            Log.d(TAG, "Logout response message: ${response.message()}")
+            Log.d(TAG, "Logout response isSuccessful: ${response.isSuccessful}")
+            
+            if (response.isSuccessful) {
+                Log.d(TAG, "Logout successful")
+                return Pair("", true)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Logout failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Failed logout API, still logging out: ${response.message()}", true)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Check internet connection. Failed to logout.", false)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Error: ${ex.message}", false)
+        }
     }
 
     fun getUsers() = cache.getUsers()
