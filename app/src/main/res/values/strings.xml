@@ -33,6 +33,16 @@
     <!-- Profile Fragment -->
     <string name="profile_title">Profil používateľa</string>
     <string name="profile_subtitle">Vaše osobné údaje</string>
+    <string name="label_name_profile">Meno:</string>
+    <string name="label_email_profile">Email:</string>
+    <string name="label_uid">UID:</string>
+    <string name="btn_logout">Odhlásiť sa</string>
+    <string name="btn_login_profile">Prihlásiť sa</string>
+    <string name="no_user_logged_in">Nie ste prihlásený</string>
+    <string name="logout_success">Odhlásenie úspešné</string>
+    <string name="logout_error">Chyba pri odhlásení</string>
+    <string name="profile_not_logged_in_title">Nie ste prihlásený</string>
+    <string name="profile_not_logged_in_subtitle">Pre zobrazenie profilu sa musíte prihlásiť</string>
     
     <!-- Feed Fragment -->
     <string name="feed_title">Zoznam</string>

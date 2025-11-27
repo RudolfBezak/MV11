@@ -60,6 +60,11 @@ data class UserRegistration(
     val password: String
 )
 
+data class UserLogin(
+    val email: String,
+    val password: String
+)
+
 data class RegistrationResponse(
     val uid: String,
     val access: String,

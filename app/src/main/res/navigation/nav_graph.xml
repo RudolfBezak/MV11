@@ -36,6 +36,10 @@
         <action
             android:id="@+id/action_signup_to_intro"
             app:destination="@id/introFragment" />
+
+        <action
+            android:id="@+id/action_signup_to_prihlasenie"
+            app:destination="@id/prihlasenieFragment" />
     </fragment>
 
     <fragment
@@ -54,6 +58,10 @@
         android:id="@+id/profileFragment"
         android:name="com.example.mv11.ProfileFragment"
         android:label="Profil">
+
+        <action
+            android:id="@+id/action_profile_to_prihlasenie"
+            app:destination="@id/prihlasenieFragment" />
     </fragment>
 
     <fragment
