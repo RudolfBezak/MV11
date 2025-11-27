@@ -54,8 +54,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text=""
-            android:background="@color/white"
-            android:padding="16dp"
+            android:minHeight="56dp"
+            style="@style/ProfileInfoText"
             app:layout_constraintTop_toBottomOf="@+id/labelName"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -75,8 +75,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text=""
-            android:background="@color/white"
-            android:padding="16dp"
+            android:minHeight="56dp"
+            style="@style/ProfileInfoText"
             app:layout_constraintTop_toBottomOf="@+id/labelEmail"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -96,8 +96,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text=""
-            android:background="@color/white"
-            android:padding="16dp"
+            android:minHeight="56dp"
+            style="@style/ProfileInfoText"
             app:layout_constraintTop_toBottomOf="@+id/labelUid"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
