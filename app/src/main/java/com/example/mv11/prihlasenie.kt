@@ -66,6 +66,20 @@ class PrihlasenieFragment : Fragment() {
             }
         }
 
+        viewModel.passwordResetResult.observe(viewLifecycleOwner) { evento ->
+            evento.getContentIfNotHandled()?.let { result ->
+                hideKeyboard(view)
+                
+                if (result.second) {
+                    Log.d("PrihlasenieFragment", "Password reset email sent successfully")
+                    showSnackbar(view, getString(R.string.password_reset_email_sent), Snackbar.LENGTH_LONG)
+                } else {
+                    Log.e("PrihlasenieFragment", "Password reset failed: ${result.first}")
+                    showSnackbar(view, result.first, Snackbar.LENGTH_LONG)
+                }
+            }
+        }
+
         btnLogin.setOnClickListener {
             val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
@@ -88,7 +102,15 @@ class PrihlasenieFragment : Fragment() {
         }
 
         tvForgotPassword.setOnClickListener {
-            Toast.makeText(context, getString(R.string.toast_forgot_not_implemented), Toast.LENGTH_SHORT).show()
+            val email = etEmail.text.toString().trim()
+            
+            if (email.isEmpty()) {
+                showSnackbar(view, getString(R.string.toast_enter_email_for_reset), Snackbar.LENGTH_SHORT)
+                return@setOnClickListener
+            }
+            
+            hideKeyboard(view)
+            viewModel.resetPassword(email)
         }
 
         val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)

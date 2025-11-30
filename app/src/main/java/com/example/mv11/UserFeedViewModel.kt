@@ -59,12 +59,8 @@ class UserFeedViewModel(private val repository: DataRepository) : ViewModel() {
             emitSource(source)
             
             // KROK 2: V pozadí načítaj fresh dáta z API
-            loading.postValue(true)
-            repository.apiListGeofence()  // Stiahne z API → uloží do DB
-            loading.postValue(false)
-            
-            // KROK 3: emitSource už sleduje DB, takže UI sa automaticky aktualizuje!
-            // (netreba robiť nič, LiveData automaticky emituje nové dáta z DB)
+            // Note: Access token will be provided when updateItems() is called
+            // Initial load will use empty token (will fail gracefully)
         }
 
     /**
@@ -86,18 +82,22 @@ class UserFeedViewModel(private val repository: DataRepository) : ViewModel() {
 
     /**
      * Manuálne obnovenie dát z API.
-     * Používa sa keď používateľ klikne na refresh button.
+     * Používa sa keď používateľ klikne na refresh button alebo pri inicializácii.
      * 
      * viewModelScope.launch - spustí coroutinu ktorá sa automaticky zruší
      * keď sa ViewModel zničí (pri close fragmentu/activity).
      * 
      * Evento() - zabalí správu do jednorazovej udalosti
+     * 
+     * @param accessToken - access token používateľa pre autentifikáciu
      */
-    fun updateItems() {
+    fun updateItems(accessToken: String) {
         viewModelScope.launch {  // Spustiť asynchrónnu operáciu
             loading.postValue(true)
-            val errorMessage = repository.apiListGeofence()  // Vráti error alebo prázdny string
-            _message.postValue(Evento(errorMessage))         // Poslať správu do UI
+            val result = repository.apiListGeofence(accessToken)  // Vráti Pair<String, Boolean>
+            if (!result.second) {
+                _message.postValue(Evento(result.first))  // Poslať správu do UI (error alebo špeciálna správa)
+            }
             loading.postValue(false)
         }
     }

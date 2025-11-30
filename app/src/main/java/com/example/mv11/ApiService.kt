@@ -6,6 +6,8 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
 
@@ -22,10 +24,11 @@ interface ApiService {
         @Body loginInfo: UserLogin
     ): Response<RegistrationResponse>
 
-    @retrofit2.http.GET("user")
+    @GET("geofence/list.php")
     suspend fun listGeofence(
-        @retrofit2.http.Header("x-apikey") apiKey: String
-    ): Response<List<UserResponse>>
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @retrofit2.http.Header("Authorization") accessToken: String
+    ): Response<GeofenceListResponse>
 
     @POST("users/logout")
     suspend fun logout(
@@ -45,6 +48,19 @@ interface ApiService {
         @retrofit2.http.Header("Authorization") accessToken: String,
         @Body passwordInfo: PasswordChangeRequest
     ): Response<PasswordChangeResponse>
+
+    @POST("geofence/update.php")
+    suspend fun updateGeofence(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @retrofit2.http.Header("Authorization") accessToken: String,
+        @Body geofenceInfo: GeofenceUpdateRequest
+    ): Response<GeofenceUpdateResponse>
+
+    @DELETE("geofence/update.php")
+    suspend fun deleteGeofence(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @retrofit2.http.Header("Authorization") accessToken: String
+    ): Response<GeofenceUpdateResponse>
 
     companion object {
         fun create(): ApiService {

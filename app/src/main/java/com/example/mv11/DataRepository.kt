@@ -6,7 +6,8 @@ import java.io.IOException
 
 class DataRepository private constructor(
     private val service: ApiService,
-    private val cache: LocalCache
+    private val cache: LocalCache,
+    private val context: Context
 ) {
     companion object {
         const val TAG = "DataRepository"
@@ -20,7 +21,8 @@ class DataRepository private constructor(
             INSTANCE ?: synchronized(lock) {
                 INSTANCE ?: DataRepository(
                     ApiService.create(),
-                    LocalCache(AppRoomDatabase.getInstance(context).appDao())
+                    LocalCache(AppRoomDatabase.getInstance(context).appDao()),
+                    context
                 ).also { INSTANCE = it }
             }
     }
@@ -160,50 +162,86 @@ class DataRepository private constructor(
         }
     }
 
-    suspend fun apiListGeofence(useMockData: Boolean = false): String {
-        if (useMockData) {
-            Log.d(TAG, "Using mock data for testing")
-            val mockUsers = MockDataHelper.getMockUsers()
-            cache.insertUserItems(mockUsers)
-            Log.d(TAG, "Mock users saved to database: ${mockUsers.size}")
-            return ""
+    suspend fun apiListGeofence(accessToken: String): Pair<String, Boolean> {
+        if (accessToken.isEmpty()) {
+            Log.e(TAG, "Access token is empty")
+            return Pair("Access token nemôže byť prázdny", false)
         }
         
         try {
-            Log.d(TAG, "Fetching users from API")
-            val response = service.listGeofence(API_KEY)
+            Log.d(TAG, "Fetching geofence list from API")
+            Log.d(TAG, "Using API key: $API_KEY")
+            val authHeader = "Bearer $accessToken"
+            val response = service.listGeofence(API_KEY, authHeader)
             Log.d(TAG, "Response code: ${response.code()}")
+            Log.d(TAG, "Response message: ${response.message()}")
+            Log.d(TAG, "Response isSuccessful: ${response.isSuccessful}")
 
             if (response.isSuccessful) {
-                response.body()?.let { userResponses ->
-                    Log.d(TAG, "Received ${userResponses.size} users from API")
-                    val users = userResponses.map {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+
+                if (body != null) {
+                    // Save "me" object coordinates if available
+                    body.me?.let { me ->
+                        val lat = me.lat.toDoubleOrNull() ?: 0.0
+                        val lon = me.lon.toDoubleOrNull() ?: 0.0
+                        val radius = me.radius.toDoubleOrNull() ?: 100.0
+                        if (lat != 0.0 && lon != 0.0) {
+                            PreferenceData.getInstance().setCurrentLocation(
+                                context,
+                                lat,
+                                lon,
+                                radius
+                            )
+                            Log.d(TAG, "Saved current location: lat=$lat, lon=$lon, radius=$radius")
+                        }
+                    }
+
+                    if (body.list.isEmpty()) {
+                        Log.w(TAG, "Geofence list is empty - user needs to enable geofence")
+                        cache.deleteUserItems() // Clear database
+                        return Pair("MUSIS_SI_ZAPNUT_GEOFENCE", false)
+                    }
+
+                    Log.d(TAG, "Received ${body.list.size} users from API")
+                    // Clear database before inserting new data
+                    cache.deleteUserItems()
+                    
+                    // Note: lat/lon are not in list items, only in "me" object
+                    // Setting them to 0.0 as they're not provided in the list
+                    val users = body.list.map {
                         UserEntity(
-                            it.uid, it.name, it.updated,
-                            it.lat, it.lon, it.radius, it.photo
+                            it.uid,
+                            it.name,
+                            it.updated,
+                            0.0, // lat not in list
+                            0.0, // lon not in list
+                            it.radius.toDoubleOrNull() ?: 0.0,
+                            it.photo
                         )
                     }
                     cache.insertUserItems(users)
-                    Log.d(TAG, "Users saved to database")
-                    return ""
+                    Log.d(TAG, "Users saved to database (old data cleared)")
+                    return Pair("", true)
+                } else {
+                    Log.e(TAG, "Response body is null")
+                    return Pair("Server returned empty response", false)
                 }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Failed to load users: ${response.message()}", false)
             }
-
-            Log.e(TAG, "Failed to load users: ${response.message()} (code: ${response.code()})")
-            if (response.code() == 404) {
-                Log.w(TAG, "API endpoint not found, using mock data as fallback")
-                return apiListGeofence(useMockData = true)
-            }
-            return "Failed to load users"
         } catch (ex: IOException) {
             Log.e(TAG, "IOException: ${ex.message}", ex)
             ex.printStackTrace()
-            return "Check internet connection. Failed to load users."
+            return Pair("Skontrolujte internetové pripojenie. Nepodarilo sa načítať používateľov.", false)
         } catch (ex: Exception) {
             Log.e(TAG, "Exception: ${ex.message}", ex)
             ex.printStackTrace()
+            return Pair("Chyba: ${ex.message}", false)
         }
-        return "Fatal error. Failed to load users."
     }
 
     suspend fun apiLogout(accessToken: String): Pair<String, Boolean> {
@@ -327,6 +365,88 @@ class DataRepository private constructor(
             Log.e(TAG, "IOException: ${ex.message}", ex)
             ex.printStackTrace()
             return Pair("Skontrolujte internetové pripojenie. Nepodarilo sa zmeniť heslo.", false)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Chyba: ${ex.message}", false)
+        }
+    }
+
+    suspend fun apiUpdateGeofence(accessToken: String, lat: Double, lon: Double, radius: Double): Pair<String, Boolean> {
+        if (accessToken.isEmpty()) {
+            Log.e(TAG, "Access token is empty")
+            return Pair("Access token nemôže byť prázdny", false)
+        }
+        try {
+            Log.d(TAG, "Sending geofence update request: lat=$lat, lon=$lon, radius=$radius")
+            Log.d(TAG, "Using API key: $API_KEY")
+            val authHeader = "Bearer $accessToken"
+            val response = service.updateGeofence(API_KEY, authHeader, GeofenceUpdateRequest(lat, lon, radius))
+            Log.d(TAG, "Response code: ${response.code()}")
+            Log.d(TAG, "Response message: ${response.message()}")
+            Log.d(TAG, "Response isSuccessful: ${response.isSuccessful}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+
+                if (body != null && body.success) {
+                    Log.d(TAG, "Geofence updated successfully")
+                    return Pair("", true)
+                } else {
+                    Log.e(TAG, "Geofence update failed: success=${body?.success}")
+                    return Pair("Nepodarilo sa aktualizovať polohu", false)
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Nepodarilo sa aktualizovať polohu: ${response.message()}", false)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Skontrolujte internetové pripojenie. Nepodarilo sa aktualizovať polohu.", false)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Chyba: ${ex.message}", false)
+        }
+    }
+
+    suspend fun apiDeleteGeofence(accessToken: String): Pair<String, Boolean> {
+        if (accessToken.isEmpty()) {
+            Log.e(TAG, "Access token is empty")
+            return Pair("Access token nemôže byť prázdny", false)
+        }
+        try {
+            Log.d(TAG, "Sending geofence delete request")
+            Log.d(TAG, "Using API key: $API_KEY")
+            val authHeader = "Bearer $accessToken"
+            val response = service.deleteGeofence(API_KEY, authHeader)
+            Log.d(TAG, "Response code: ${response.code()}")
+            Log.d(TAG, "Response message: ${response.message()}")
+            Log.d(TAG, "Response isSuccessful: ${response.isSuccessful}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+
+                if (body != null && body.success) {
+                    Log.d(TAG, "Geofence deleted successfully")
+                    return Pair("", true)
+                } else {
+                    Log.e(TAG, "Geofence delete failed: success=${body?.success}")
+                    return Pair("Nepodarilo sa odstrániť polohu", false)
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Nepodarilo sa odstrániť polohu: ${response.message()}", false)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Skontrolujte internetové pripojenie. Nepodarilo sa odstrániť polohu.", false)
         } catch (ex: Exception) {
             Log.e(TAG, "Exception: ${ex.message}", ex)
             ex.printStackTrace()

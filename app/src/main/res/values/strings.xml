@@ -22,9 +22,10 @@
     <string name="signup_link">Zaregistrujte sa</string>
     <string name="toast_enter_email">Zadajte meno alebo email</string>
     <string name="toast_enter_password">Zadajte heslo</string>
+    <string name="toast_enter_email_for_reset">Zadajte email pre obnovenie hesla</string>
     <string name="toast_login_success">Prihlásenie úspešné!</string>
+    <string name="toast_forgot_not_implemented">Funkcia \'Zabudol som heslo\' ešte nie je implementovaná</string>
     <string name="error_login_wrong_credentials">Meno alebo heslo je nesprávne</string>
-    <string name="toast_forgot_not_implemented">Funkcia \'Zabudnuté heslo\' zatiaľ nie je implementovaná</string>
     
     <!-- Signup Fragment -->
     <string name="signup_title">Registrácia</string>
@@ -80,4 +81,16 @@
     <string name="password_change_success">Heslo bolo úspešne zmenené</string>
     <string name="password_reset_email_sent">Email s odkazom na obnovenie hesla bol odoslaný</string>
     <string name="error_email_not_found">Email sa nenašiel</string>
+    
+    <!-- Location Sharing -->
+    <string name="location_sharing_enabled">Zdieľanie polohy zapnuté</string>
+    <string name="location_sharing_disabled">Zdieľanie polohy vypnuté</string>
+    <string name="location_permission_denied">Pre zdieľanie polohy je potrebné povolenie</string>
+    <string name="location_not_available">Poloha nie je dostupná</string>
+    <string name="location_error">Chyba pri získavaní polohy</string>
+    <string name="error_enable_geofence">Musíš si zapnúť geofence na videnie používateľov</string>
+    <string name="label_location_coords">Súradnice polohy</string>
+    <string name="label_radius">Polomer (m)</string>
+    <string name="btn_update_range">Aktualizovať polomer</string>
+    <string name="radius_updated">Polomer bol úspešne aktualizovaný</string>
 </resources>

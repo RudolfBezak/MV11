@@ -102,6 +102,56 @@ class PreferenceData private constructor() {
         return sharedPref.getBoolean(locationSharingKey, false)
     }
 
+    /**
+     * Uloží aktuálnu polohu (lat, lon) a radius do SharedPreferences.
+     * 
+     * @param context - kontext aplikácie
+     * @param lat - zemepisná šírka
+     * @param lon - zemepisná dĺžka
+     * @param radius - polomer geofence v metroch
+     */
+    fun setCurrentLocation(context: Context?, lat: Double, lon: Double, radius: Double) {
+        val sharedPref = getSharedPreferences(context) ?: return
+        val editor = sharedPref.edit()
+        editor.putFloat(locationLatKey, lat.toFloat())
+        editor.putFloat(locationLonKey, lon.toFloat())
+        editor.putFloat(locationRadiusKey, radius.toFloat())
+        editor.apply()
+    }
+
+    /**
+     * Načíta aktuálnu polohu z SharedPreferences.
+     * 
+     * @param context - kontext aplikácie
+     * @return Triple<lat, lon, radius> alebo null ak nie sú uložené
+     */
+    fun getCurrentLocation(context: Context?): Triple<Double, Double, Double>? {
+        val sharedPref = getSharedPreferences(context) ?: return null
+        val lat = sharedPref.getFloat(locationLatKey, Float.NaN)
+        val lon = sharedPref.getFloat(locationLonKey, Float.NaN)
+        val radius = sharedPref.getFloat(locationRadiusKey, Float.NaN)
+        
+        if (lat.isNaN() || lon.isNaN() || radius.isNaN()) {
+            return null
+        }
+        
+        return Triple(lat.toDouble(), lon.toDouble(), radius.toDouble())
+    }
+
+    /**
+     * Vymaže uloženú polohu z SharedPreferences.
+     * 
+     * @param context - kontext aplikácie
+     */
+    fun clearCurrentLocation(context: Context?) {
+        val sharedPref = getSharedPreferences(context) ?: return
+        val editor = sharedPref.edit()
+        editor.remove(locationLatKey)
+        editor.remove(locationLonKey)
+        editor.remove(locationRadiusKey)
+        editor.apply()
+    }
+
     companion object {
         /**
          * Singleton inštancia PreferenceData.
@@ -142,6 +192,13 @@ class PreferenceData private constructor() {
          * Kľúč pre uloženie stavu zdieľania polohy v SharedPreferences.
          */
         private const val locationSharingKey = "locationSharingEnabled"
+
+        /**
+         * Kľúče pre uloženie aktuálnej polohy v SharedPreferences.
+         */
+        private const val locationLatKey = "currentLocationLat"
+        private const val locationLonKey = "currentLocationLon"
+        private const val locationRadiusKey = "currentLocationRadius"
     }
 }
 

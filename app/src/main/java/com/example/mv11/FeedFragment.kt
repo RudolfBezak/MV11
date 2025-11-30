@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 
 class FeedFragment : Fragment() {
 
@@ -55,8 +56,27 @@ class FeedFragment : Fragment() {
             evento.getContentIfNotHandled()?.let { message ->
                 if (message.isNotEmpty()) {
                     Log.e("FeedFragment", "Error: $message")
+                    if (message == "MUSIS_SI_ZAPNUT_GEOFENCE") {
+                        Snackbar.make(
+                            view.findViewById(R.id.feed_recyclerview),
+                            getString(R.string.error_enable_geofence),
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Snackbar.make(
+                            view.findViewById(R.id.feed_recyclerview),
+                            message,
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
                 }
             }
+        }
+
+        // Load users on fragment creation
+        val user = PreferenceData.getInstance().getUser(requireContext())
+        if (user != null && user.access.isNotEmpty()) {
+            viewModel.updateItems(user.access)
         }
     }
 }

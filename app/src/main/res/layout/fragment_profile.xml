@@ -152,6 +152,93 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
+            android:id="@+id/labelLocationCoords"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_location_coords"
+            style="@style/AppSubtitle"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/locationSharingContainer" />
+
+        <TextView
+            android:id="@+id/tvLocationCoords"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:minHeight="56dp"
+            style="@style/ProfileInfoText"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/labelLocationCoords"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            android:id="@+id/labelRadius"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_radius"
+            style="@style/AppSubtitle"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvLocationCoords" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/radiusContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:background="@drawable/profile_info_background"
+            android:padding="16dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/labelRadius"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderRadius"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:valueFrom="50.0"
+                android:valueTo="1000.0"
+                android:stepSize="50.0"
+                android:value="100.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/tvRadiusValue"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <TextView
+                android:id="@+id/tvRadiusValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="100 m"
+                android:textColor="@color/secondary_yellow"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:minWidth="60dp"
+                android:gravity="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnUpdateRange"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_update_range"
+            style="@style/PrimaryButton"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/radiusContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
             android:id="@+id/tvChangePassword"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -160,7 +247,7 @@
             android:textSize="14sp"
             android:padding="8dp"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@+id/locationSharingContainer"
+            app:layout_constraintTop_toBottomOf="@+id/btnUpdateRange"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp" />

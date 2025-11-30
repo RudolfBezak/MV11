@@ -39,7 +39,6 @@ class ChangePasswordFragment : Fragment() {
         val etOldPassword = view.findViewById<TextInputEditText>(R.id.etOldPassword)
         val etNewPassword = view.findViewById<TextInputEditText>(R.id.etNewPassword)
         val btnChangePassword = view.findViewById<MaterialButton>(R.id.btnChangePassword)
-        val tvForgotPassword = view.findViewById<View>(R.id.tvForgotPassword)
 
         viewModel.passwordChangeResult.observe(viewLifecycleOwner) { evento ->
             evento.getContentIfNotHandled()?.let { result ->
@@ -51,20 +50,6 @@ class ChangePasswordFragment : Fragment() {
                     findNavController().popBackStack()
                 } else {
                     Log.e("ChangePasswordFragment", "Password change failed: ${result.first}")
-                    showSnackbar(view, result.first, Snackbar.LENGTH_LONG)
-                }
-            }
-        }
-
-        viewModel.passwordResetResult.observe(viewLifecycleOwner) { evento ->
-            evento.getContentIfNotHandled()?.let { result ->
-                hideKeyboard(view)
-                
-                if (result.second) {
-                    Log.d("ChangePasswordFragment", "Password reset email sent successfully")
-                    showSnackbar(view, getString(R.string.password_reset_email_sent), Snackbar.LENGTH_LONG)
-                } else {
-                    Log.e("ChangePasswordFragment", "Password reset failed: ${result.first}")
                     showSnackbar(view, result.first, Snackbar.LENGTH_LONG)
                 }
             }
@@ -89,15 +74,6 @@ class ChangePasswordFragment : Fragment() {
                 viewModel.changePassword(user.access, oldPassword, newPassword)
             } else {
                 showSnackbar(view, getString(R.string.no_user_logged_in), Snackbar.LENGTH_SHORT)
-            }
-        }
-
-        tvForgotPassword.setOnClickListener {
-            val user = PreferenceData.getInstance().getUser(context)
-            if (user != null && user.email.isNotEmpty()) {
-                viewModel.resetPassword(user.email)
-            } else {
-                showSnackbar(view, getString(R.string.error_email_not_found), Snackbar.LENGTH_SHORT)
             }
         }
 

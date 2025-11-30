@@ -1,5 +1,8 @@
 package com.example.mv11
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -7,17 +10,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.slider.Slider
 import com.google.android.material.switchmaterial.SwitchMaterial
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
 
 class ProfileFragment : Fragment() {
 
     private lateinit var viewModel: AuthViewModel
     private var view: View? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1001
+    private val DEFAULT_RADIUS = 100.0 // meters
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,6 +42,8 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
         viewModel = ViewModelProvider(requireActivity(), object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -64,9 +77,66 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        viewModel.geofenceUpdateResult.observe(viewLifecycleOwner) { evento ->
+            evento.getContentIfNotHandled()?.let { result ->
+                val currentView = view ?: return@observe
+                if (result.second) {
+                    Log.d("ProfileFragment", "Geofence updated successfully")
+                    val currentLocation = PreferenceData.getInstance().getCurrentLocation(context)
+                    if (currentLocation != null) {
+                        updateUI() // Refresh UI to show updated radius
+                    }
+                    val targetView = currentView.findViewById<View>(R.id.btnUpdateRange) 
+                        ?: currentView.findViewById(R.id.switchLocationSharing)
+                    Snackbar.make(
+                        targetView,
+                        getString(R.string.radius_updated),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Log.e("ProfileFragment", "Geofence update failed: ${result.first}")
+                    val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
+                    switchLocationSharing.isChecked = false
+                    PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+                    PreferenceData.getInstance().clearCurrentLocation(context)
+                    updateUI() // Refresh UI
+                    Snackbar.make(
+                        switchLocationSharing,
+                        result.first,
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+
+        viewModel.geofenceDeleteResult.observe(viewLifecycleOwner) { evento ->
+            evento.getContentIfNotHandled()?.let { result ->
+                val currentView = view ?: return@observe
+                if (result.second) {
+                    Log.d("ProfileFragment", "Geofence deleted successfully")
+                    PreferenceData.getInstance().clearCurrentLocation(context)
+                    updateUI() // Refresh UI to hide coordinates
+                    Snackbar.make(
+                        currentView.findViewById(R.id.switchLocationSharing),
+                        getString(R.string.location_sharing_disabled),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Log.e("ProfileFragment", "Geofence delete failed: ${result.first}")
+                    Snackbar.make(
+                        currentView.findViewById(R.id.switchLocationSharing),
+                        result.first,
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+
         setupClickListeners()
         setupLocationSharingToggle()
         setupChangePasswordClick()
+        setupRadiusSlider()
+        setupUpdateRangeButton()
 
         val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
         bottomNav.setActiveItem(BottomNavItem.PROFILE)
@@ -89,6 +159,13 @@ class ProfileFragment : Fragment() {
         val labelLocationSharing = currentView.findViewById<TextView>(R.id.labelLocationSharing)
         val locationSharingContainer = currentView.findViewById<View>(R.id.locationSharingContainer)
         val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
+        val labelLocationCoords = currentView.findViewById<TextView>(R.id.labelLocationCoords)
+        val tvLocationCoords = currentView.findViewById<TextView>(R.id.tvLocationCoords)
+        val labelRadius = currentView.findViewById<TextView>(R.id.labelRadius)
+        val radiusContainer = currentView.findViewById<View>(R.id.radiusContainer)
+        val sliderRadius = currentView.findViewById<Slider>(R.id.sliderRadius)
+        val tvRadiusValue = currentView.findViewById<TextView>(R.id.tvRadiusValue)
+        val btnUpdateRange = currentView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnUpdateRange)
         val tvChangePassword = currentView.findViewById<TextView>(R.id.tvChangePassword)
         val btnLogout = currentView.findViewById<Button>(R.id.btnLogout)
         val btnLogin = currentView.findViewById<Button>(R.id.btnLogin)
@@ -115,6 +192,35 @@ class ProfileFragment : Fragment() {
             // Load location sharing preference
             val locationSharingEnabled = PreferenceData.getInstance().getLocationSharingEnabled(context)
             switchLocationSharing.isChecked = locationSharingEnabled
+
+            // Show location coordinates and radius slider if location sharing is enabled
+            if (locationSharingEnabled) {
+                val currentLocation = PreferenceData.getInstance().getCurrentLocation(context)
+                if (currentLocation != null) {
+                    labelLocationCoords.visibility = View.VISIBLE
+                    tvLocationCoords.visibility = View.VISIBLE
+                    tvLocationCoords.text = "Lat: ${String.format("%.6f", currentLocation.first)}\nLon: ${String.format("%.6f", currentLocation.second)}"
+                    
+                    labelRadius.visibility = View.VISIBLE
+                    radiusContainer.visibility = View.VISIBLE
+                    btnUpdateRange.visibility = View.VISIBLE
+                    
+                    sliderRadius.value = currentLocation.third.toFloat()
+                    tvRadiusValue.text = "${currentLocation.third.toInt()} m"
+                } else {
+                    labelLocationCoords.visibility = View.GONE
+                    tvLocationCoords.visibility = View.GONE
+                    labelRadius.visibility = View.GONE
+                    radiusContainer.visibility = View.GONE
+                    btnUpdateRange.visibility = View.GONE
+                }
+            } else {
+                labelLocationCoords.visibility = View.GONE
+                tvLocationCoords.visibility = View.GONE
+                labelRadius.visibility = View.GONE
+                radiusContainer.visibility = View.GONE
+                btnUpdateRange.visibility = View.GONE
+            }
         } else {
             labelName.visibility = View.GONE
             tvUserName.visibility = View.GONE
@@ -124,6 +230,11 @@ class ProfileFragment : Fragment() {
             tvUserUid.visibility = View.GONE
             labelLocationSharing.visibility = View.GONE
             locationSharingContainer.visibility = View.GONE
+            labelLocationCoords.visibility = View.GONE
+            tvLocationCoords.visibility = View.GONE
+            labelRadius.visibility = View.GONE
+            radiusContainer.visibility = View.GONE
+            btnUpdateRange.visibility = View.GONE
             tvChangePassword.visibility = View.GONE
             btnLogout.visibility = View.GONE
             btnLogin.visibility = View.VISIBLE
@@ -182,8 +293,115 @@ class ProfileFragment : Fragment() {
         val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
 
         switchLocationSharing.setOnCheckedChangeListener { _, isChecked ->
-            PreferenceData.getInstance().setLocationSharingEnabled(context, isChecked)
-            Log.d("ProfileFragment", "Location sharing ${if (isChecked) "enabled" else "disabled"}")
+            val user = PreferenceData.getInstance().getUser(context)
+            if (user == null || user.access.isEmpty()) {
+                switchLocationSharing.isChecked = false
+                Snackbar.make(
+                    switchLocationSharing,
+                    getString(R.string.no_user_logged_in),
+                    Snackbar.LENGTH_SHORT
+                ).show()
+                return@setOnCheckedChangeListener
+            }
+
+            if (isChecked) {
+                // Request location permission and get location
+                if (checkLocationPermission()) {
+                    getCurrentLocationAndUpdateGeofence(user.access)
+                } else {
+                    requestLocationPermission()
+                    switchLocationSharing.isChecked = false
+                }
+            } else {
+                // Delete geofence
+                PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+                viewModel.deleteGeofence(user.access)
+            }
+        }
+    }
+
+    private fun checkLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestLocationPermission() {
+        ActivityCompat.requestPermissions(
+            requireActivity(),
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                val user = PreferenceData.getInstance().getUser(context)
+                if (user != null && user.access.isNotEmpty()) {
+                    val switchLocationSharing = view?.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
+                    switchLocationSharing?.isChecked = true
+                    getCurrentLocationAndUpdateGeofence(user.access)
+                }
+            } else {
+                val currentView = view ?: return
+                Snackbar.make(
+                    currentView.findViewById(R.id.switchLocationSharing),
+                    getString(R.string.location_permission_denied),
+                    Snackbar.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun getCurrentLocationAndUpdateGeofence(accessToken: String) {
+        if (!checkLocationPermission()) {
+            return
+        }
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+            if (location != null) {
+                Log.d("ProfileFragment", "Location: lat=${location.latitude}, lon=${location.longitude}")
+                PreferenceData.getInstance().setLocationSharingEnabled(context, true)
+                PreferenceData.getInstance().setCurrentLocation(context, location.latitude, location.longitude, DEFAULT_RADIUS)
+                viewModel.updateGeofence(accessToken, location.latitude, location.longitude, DEFAULT_RADIUS)
+                updateUI() // Refresh UI to show coordinates
+            } else {
+                Log.e("ProfileFragment", "Location is null")
+                val currentView = view ?: return@addOnSuccessListener
+                val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
+                switchLocationSharing.isChecked = false
+                PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+                Snackbar.make(
+                    switchLocationSharing,
+                    getString(R.string.location_not_available),
+                    Snackbar.LENGTH_LONG
+                ).show()
+            }
+        }.addOnFailureListener { exception ->
+            Log.e("ProfileFragment", "Failed to get location: ${exception.message}", exception)
+            val currentView = view ?: return@addOnFailureListener
+            val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
+            switchLocationSharing.isChecked = false
+            PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+            Snackbar.make(
+                switchLocationSharing,
+                getString(R.string.location_error),
+                Snackbar.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -193,6 +411,48 @@ class ProfileFragment : Fragment() {
         
         tvChangePassword.setOnClickListener {
             findNavController().navigate(R.id.action_profile_to_change_password)
+        }
+    }
+
+    private fun setupRadiusSlider() {
+        val currentView = view ?: return
+        val sliderRadius = currentView.findViewById<Slider>(R.id.sliderRadius)
+        val tvRadiusValue = currentView.findViewById<TextView>(R.id.tvRadiusValue)
+
+        sliderRadius.addOnChangeListener { _, value, _ ->
+            tvRadiusValue.text = "${value.toInt()} m"
+        }
+    }
+
+    private fun setupUpdateRangeButton() {
+        val currentView = view ?: return
+        val btnUpdateRange = currentView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnUpdateRange)
+        val sliderRadius = currentView.findViewById<Slider>(R.id.sliderRadius)
+
+        btnUpdateRange.setOnClickListener {
+            val user = PreferenceData.getInstance().getUser(context)
+            if (user == null || user.access.isEmpty()) {
+                Snackbar.make(
+                    btnUpdateRange,
+                    getString(R.string.no_user_logged_in),
+                    Snackbar.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            val currentLocation = PreferenceData.getInstance().getCurrentLocation(context)
+            if (currentLocation == null) {
+                Snackbar.make(
+                    btnUpdateRange,
+                    getString(R.string.location_not_available),
+                    Snackbar.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            val newRadius = sliderRadius.value.toDouble()
+            PreferenceData.getInstance().setCurrentLocation(context, currentLocation.first, currentLocation.second, newRadius)
+            viewModel.updateGeofence(user.access, currentLocation.first, currentLocation.second, newRadius)
         }
     }
 }

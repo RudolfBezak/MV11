@@ -99,3 +99,33 @@ data class PasswordChangeResponse(
     val status: String
 )
 
+data class GeofenceUpdateRequest(
+    val lat: Double,
+    val lon: Double,
+    val radius: Double
+)
+
+data class GeofenceUpdateResponse(
+    val success: Boolean
+)
+
+data class GeofenceMe(
+    val uid: String,
+    val lat: String,
+    val lon: String,
+    val radius: String
+)
+
+data class GeofenceUserItem(
+    val uid: String,
+    val radius: String,
+    val updated: String,
+    val name: String,
+    val photo: String
+)
+
+data class GeofenceListResponse(
+    val me: GeofenceMe? = null,
+    val list: List<GeofenceUserItem>
+)
+
