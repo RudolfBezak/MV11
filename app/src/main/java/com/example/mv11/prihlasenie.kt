@@ -1,11 +1,13 @@
 package com.example.mv11
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -44,6 +46,9 @@ class PrihlasenieFragment : Fragment() {
 
         viewModel.loginResult.observe(viewLifecycleOwner) { evento ->
             evento.getContentIfNotHandled()?.let { result ->
+                // Hide keyboard before showing Snackbar
+                hideKeyboard(view)
+                
                 result.second?.let { user ->
                     Log.d("PrihlasenieFragment", "Login successful: $user")
                     Log.d("PrihlasenieFragment", "Access token: ${user.access}, length: ${user.access.length}")
@@ -52,19 +57,11 @@ class PrihlasenieFragment : Fragment() {
                     PreferenceData.getInstance().putUser(context, user)
                     Log.d("PrihlasenieFragment", "User saved to SharedPreferences")
 
-                    Snackbar.make(
-                        btnLogin,
-                        getString(R.string.toast_login_success),
-                        Snackbar.LENGTH_SHORT
-                    ).show()
+                    showSnackbar(view, getString(R.string.toast_login_success), Snackbar.LENGTH_SHORT)
                     findNavController().navigate(R.id.feedFragment)
                 } ?: run {
                     Log.e("PrihlasenieFragment", "Login failed: ${result.first}")
-                    Snackbar.make(
-                        btnLogin,
-                        result.first,
-                        Snackbar.LENGTH_SHORT
-                    ).show()
+                    showSnackbar(view, result.first, Snackbar.LENGTH_LONG)
                 }
             }
         }
@@ -96,5 +93,21 @@ class PrihlasenieFragment : Fragment() {
 
         val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
         bottomNav.setActiveItem(BottomNavItem.PROFILE)
+    }
+
+    private fun hideKeyboard(view: View) {
+        val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    private fun showSnackbar(view: View, message: String, duration: Int) {
+        val snackbar = Snackbar.make(
+            view.findViewById(R.id.contentContainer),
+            message,
+            duration
+        )
+        // Set anchor to bottom navigation to show above it
+        snackbar.anchorView = view.findViewById(R.id.bottomNavigationWidget)
+        snackbar.show()
     }
 }

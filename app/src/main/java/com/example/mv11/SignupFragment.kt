@@ -1,10 +1,12 @@
 package com.example.mv11
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
@@ -36,6 +38,9 @@ class SignupFragment : Fragment() {
 
         viewModel.registrationResult.observe(viewLifecycleOwner) { evento ->
             evento.getContentIfNotHandled()?.let { result ->
+                // Hide keyboard before showing Snackbar
+                hideKeyboard(view)
+                
                 result.second?.let { user ->
                     Log.d("SignupFragment", "Registration successful: $user")
                     Log.d("SignupFragment", "Access token: ${user.access}, length: ${user.access.length}")
@@ -44,19 +49,11 @@ class SignupFragment : Fragment() {
                     PreferenceData.getInstance().putUser(context, user)
                     Log.d("SignupFragment", "User saved to SharedPreferences with access token")
                     
-                    Snackbar.make(
-                        view.findViewById(R.id.submitButton),
-                        getString(R.string.registration_success),
-                        Snackbar.LENGTH_SHORT
-                    ).show()
+                    showSnackbar(view, getString(R.string.registration_success), Snackbar.LENGTH_SHORT)
                     findNavController().navigate(R.id.feedFragment)
                 } ?: run {
                     Log.e("SignupFragment", "Registration failed: ${result.first}")
-                    Snackbar.make(
-                        view.findViewById(R.id.submitButton),
-                        result.first,
-                        Snackbar.LENGTH_LONG
-                    ).show()
+                    showSnackbar(view, result.first, Snackbar.LENGTH_LONG)
                 }
             }
         }
@@ -71,6 +68,22 @@ class SignupFragment : Fragment() {
         
         val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
         bottomNav.setActiveItem(BottomNavItem.LIST)
+    }
+
+    private fun hideKeyboard(view: View) {
+        val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    private fun showSnackbar(view: View, message: String, duration: Int) {
+        val snackbar = Snackbar.make(
+            view.findViewById(R.id.contentContainer),
+            message,
+            duration
+        )
+        // Set anchor to bottom navigation to show above it
+        snackbar.anchorView = view.findViewById(R.id.bottomNavigationWidget)
+        snackbar.show()
     }
 }
 
