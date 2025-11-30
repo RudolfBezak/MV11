@@ -4,16 +4,17 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
@@ -21,17 +22,19 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
-import com.mapbox.maps.extension.style.expressions.dsl.generated.literal
-import com.mapbox.maps.extension.style.layers.generated.circleLayer
 import com.mapbox.maps.extension.style.layers.generated.fillLayer
 import com.mapbox.maps.extension.style.layers.generated.lineLayer
 import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
 import com.mapbox.maps.extension.style.style
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.layers.addLayer
+import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 
 class MapFragment : Fragment() {
     
@@ -121,27 +124,30 @@ class MapFragment : Fragment() {
             
             Log.d("MapFragment", "Pridávam marker pre aktuálneho používateľa: $userName na [$lat, $lon] s radiusom $radius m")
             
-            // Add marker for current user
-            val pointAnnotationOptions = PointAnnotationOptions()
-                .withPoint(Point.fromLngLat(lon, lat))
-                .withIconImage(createMarkerBitmap(userName))
+            // Add circle FIRST with low z-order (below markers)
+            addCircleAroundUser(lat, lon, radius)
             
-            pointAnnotationManager?.create(pointAnnotationOptions)
+            // Add marker for current user (red border, thicker)
+            val currentUserPhoto = currentUser?.let { getUserPhotoFromList(it.uid, users) } ?: ""
+            createMarkerWithPhoto(userName, currentUserPhoto, isCurrentUser = true) { bitmap ->
+                val pointAnnotationOptions = PointAnnotationOptions()
+                    .withPoint(Point.fromLngLat(lon, lat))
+                    .withIconImage(bitmap)
+                pointAnnotationManager?.create(pointAnnotationOptions)
+            }
             
             // Add markers for other users (without lat/lon) - random positions in circle
             val usersWithoutLocation = users.filter { it.lat == 0.0 && it.lon == 0.0 }
             usersWithoutLocation.forEach { user ->
                 val randomPosition = generateRandomPositionInCircle(lat, lon, radius)
-                val userMarkerOptions = PointAnnotationOptions()
-                    .withPoint(Point.fromLngLat(randomPosition.second, randomPosition.first))
-                    .withIconImage(createMarkerBitmap(user.name))
-                
-                pointAnnotationManager?.create(userMarkerOptions)
-                Log.d("MapFragment", "Pridávam marker pre používateľa: ${user.name} na náhodnej pozícii [${randomPosition.first}, ${randomPosition.second}]")
+                createMarkerWithPhoto(user.name, user.photo, isCurrentUser = false) { bitmap ->
+                    val userMarkerOptions = PointAnnotationOptions()
+                        .withPoint(Point.fromLngLat(randomPosition.second, randomPosition.first))
+                        .withIconImage(bitmap)
+                    pointAnnotationManager?.create(userMarkerOptions)
+                    Log.d("MapFragment", "Pridávam marker pre používateľa: ${user.name} na náhodnej pozícii [${randomPosition.first}, ${randomPosition.second}]")
+                }
             }
-            
-            // Add circle around current user
-            addCircleAroundUser(lat, lon, radius)
             
             // Center camera on current user
             map.getMapboxMap().setCamera(
@@ -213,21 +219,44 @@ class MapFragment : Fragment() {
                 }
             )
             
-            // Add fill layer for circle using extension function
-            style.addLayer(
-                fillLayer(layerId, sourceId) {
-                    fillColor("#FFD500") // Yellow color
-                    fillOpacity(0.1)
-                }
-            )
+            // Add fill layer for circle BELOW other layers (so markers are on top)
+            // Try to add below "water" layer, if it doesn't exist, add normally
+            try {
+                style.addLayerBelow(
+                    fillLayer(layerId, sourceId) {
+                        fillColor("#FFD500") // Yellow color
+                        fillOpacity(0.1)
+                    },
+                    "water" // Add below water layer
+                )
+            } catch (e: Exception) {
+                // If "water" layer doesn't exist, add normally (will be below annotations)
+                style.addLayer(
+                    fillLayer(layerId, sourceId) {
+                        fillColor("#FFD500") // Yellow color
+                        fillOpacity(0.1)
+                    }
+                )
+            }
             
-            // Add stroke layer for circle border using extension function
-            style.addLayer(
-                lineLayer(strokeLayerId, sourceId) {
-                    lineColor("#FFD500") // Yellow color
-                    lineWidth(2.0)
-                }
-            )
+            // Add stroke layer for circle border BELOW other layers
+            try {
+                style.addLayerBelow(
+                    lineLayer(strokeLayerId, sourceId) {
+                        lineColor("#FFD500") // Yellow color
+                        lineWidth(2.0)
+                    },
+                    "water" // Add below water layer
+                )
+            } catch (e: Exception) {
+                // If "water" layer doesn't exist, add normally (will be below annotations)
+                style.addLayer(
+                    lineLayer(strokeLayerId, sourceId) {
+                        lineColor("#FFD500") // Yellow color
+                        lineWidth(2.0)
+                    }
+                )
+            }
         }
     }
     
@@ -270,13 +299,94 @@ class MapFragment : Fragment() {
         }
     }
     
-    private fun createMarkerBitmap(name: String): Bitmap {
+    private fun getUserPhotoFromList(uid: String, users: List<UserEntity>): String {
+        return users.find { it.uid == uid }?.photo ?: ""
+    }
+    
+    private fun createMarkerWithPhoto(name: String, photoPath: String, isCurrentUser: Boolean = false, callback: (Bitmap) -> Unit) {
+        val size = 100
+        
+        if (photoPath.isNotEmpty()) {
+            // Clean photo path - remove "../" if present
+            val cleanPhotoPath = photoPath.replace("../", "")
+            // Build full URL with prefix
+            val photoUrl = "https://upload.mcomputing.eu/$cleanPhotoPath"
+            
+            // Create placeholder bitmap
+            val placeholderBitmap = createMarkerBitmap(name, isCurrentUser)
+            val placeholderDrawable = BitmapDrawable(requireContext().resources, placeholderBitmap)
+            
+            // Load photo asynchronously using Glide
+            Glide.with(requireContext())
+                .asBitmap()
+                .load(photoUrl)
+                .placeholder(placeholderDrawable)
+                .error(placeholderBitmap)
+                .circleCrop()
+                .into(object : CustomTarget<Bitmap>(size, size) {
+                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                        // Create circular bitmap with photo
+                        val circularBitmap = createCircularBitmap(resource, size, isCurrentUser)
+                        callback(circularBitmap)
+                    }
+                    
+                    override fun onLoadCleared(placeholder: android.graphics.drawable.Drawable?) {
+                        // Use placeholder if load is cleared
+                        callback(placeholderBitmap)
+                    }
+                })
+        } else {
+            // No photo available, use text marker
+            callback(createMarkerBitmap(name, isCurrentUser))
+        }
+    }
+    
+    private fun createCircularBitmap(source: Bitmap, size: Int, isCurrentUser: Boolean = false): Bitmap {
+        val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+        
+        val paint = Paint().apply {
+            isAntiAlias = true
+        }
+        
+        // Scale source bitmap to fit
+        val scaledBitmap = Bitmap.createScaledBitmap(source, size, size, true)
+        
+        val radius = size / 2f
+        
+        // Draw circular mask first
+        paint.color = Color.WHITE
+        paint.style = Paint.Style.FILL
+        canvas.drawCircle(radius, radius, radius, paint)
+        
+        // Use PorterDuff mode to clip bitmap to circle
+        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+        canvas.drawBitmap(scaledBitmap, 0f, 0f, paint)
+        
+        // Draw border - red and thicker for current user, yellow for others
+        paint.xfermode = null
+        paint.style = Paint.Style.STROKE
+        if (isCurrentUser) {
+            paint.color = Color.RED // Red border for current user
+            paint.strokeWidth = 8f // Thicker border
+        } else {
+            paint.color = Color.parseColor("#FFD500") // Yellow border
+            paint.strokeWidth = 4f
+        }
+        val borderOffset = if (isCurrentUser) 4f else 2f
+        canvas.drawCircle(radius, radius, radius - borderOffset, paint)
+        
+        return output
+    }
+    
+    private fun createMarkerBitmap(name: String, isCurrentUser: Boolean = false): Bitmap {
         val size = 100
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         
         val paint = Paint().apply {
-            color = Color.parseColor("#FFD500") // Yellow color (secondary_yellow)
+            // Red for current user, yellow for others
+            color = if (isCurrentUser) Color.RED else Color.parseColor("#FFD500")
             style = Paint.Style.FILL
             isAntiAlias = true
         }

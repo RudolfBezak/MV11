@@ -23,8 +23,7 @@ class IntroFragment : Fragment() {
         
         updateUI(view)
         
-        val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
-        bottomNav.setActiveItem(BottomNavItem.MAP)
+        // Don't set active item on intro screen - let user navigate first
     }
 
     override fun onResume() {
