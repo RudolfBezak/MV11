@@ -208,15 +208,22 @@ class DataRepository private constructor(
                     // Clear database before inserting new data
                     cache.deleteUserItems()
                     
+                    // Get lat/lon from "me" object if available
+                    val meLat = body.me?.lat?.toDoubleOrNull() ?: 0.0
+                    val meLon = body.me?.lon?.toDoubleOrNull() ?: 0.0
+                    val meUid = body.me?.uid
+                    
                     // Note: lat/lon are not in list items, only in "me" object
-                    // Setting them to 0.0 as they're not provided in the list
+                    // Use lat/lon from "me" object if uid matches, otherwise set to 0.0
                     val users = body.list.map {
+                        val lat = if (it.uid == meUid && meLat != 0.0) meLat else 0.0
+                        val lon = if (it.uid == meUid && meLon != 0.0) meLon else 0.0
                         UserEntity(
                             it.uid,
                             it.name,
                             it.updated,
-                            0.0, // lat not in list
-                            0.0, // lon not in list
+                            lat,
+                            lon,
                             it.radius.toDoubleOrNull() ?: 0.0,
                             it.photo
                         )

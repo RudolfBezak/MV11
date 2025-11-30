@@ -5,17 +5,24 @@
     android:layout_height="match_parent"
     android:background="@color/secondary_yellow">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/contentContainer"
+    <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:paddingTop="24dp"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:fillViewport="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/bottomNavigationWidget"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/contentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="24dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="24dp">
 
         <TextView
             android:id="@+id/textView"
@@ -201,12 +208,10 @@
                 android:id="@+id/sliderRadius"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:valueFrom="50.0"
-                android:valueTo="1000.0"
-                android:stepSize="50.0"
-                android:value="100.0"
-                app:trackTint="@color/slider_track_tint"
-                app:thumbTint="@color/slider_thumb_tint"
+                android:valueFrom="0.0"
+                android:valueTo="5.0"
+                android:stepSize="1.0"
+                android:value="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/tvRadiusValue"
                 app:layout_constraintTop_toTopOf="parent"
@@ -293,7 +298,9 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
 
     <com.example.mv11.BottomNavigationWidget
         android:id="@+id/bottomNavigationWidget"

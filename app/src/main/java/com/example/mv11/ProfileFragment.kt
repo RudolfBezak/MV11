@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.content.res.ColorStateList
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -205,8 +206,21 @@ class ProfileFragment : Fragment() {
                     radiusContainer.visibility = View.VISIBLE
                     btnUpdateRange.visibility = View.VISIBLE
                     
-                    sliderRadius.value = currentLocation.third.toFloat()
-                    tvRadiusValue.text = "${currentLocation.third.toInt()} m"
+                    // Find closest radius value index
+                    val radiusValues = listOf(100, 200, 500, 1000, 5000, 10000)
+                    val currentRadius = currentLocation.third.toInt()
+                    val closestIndex = radiusValues.indexOfFirst { it >= currentRadius }
+                        .takeIf { it != -1 } ?: (radiusValues.size - 1)
+                    val indexToUse = if (closestIndex > 0 && 
+                        kotlin.math.abs(radiusValues[closestIndex] - currentRadius) > 
+                        kotlin.math.abs(radiusValues[closestIndex - 1] - currentRadius)) {
+                        closestIndex - 1
+                    } else {
+                        closestIndex
+                    }
+                    
+                    sliderRadius.value = indexToUse.toFloat()
+                    tvRadiusValue.text = "${radiusValues[indexToUse]} m"
                 } else {
                     labelLocationCoords.visibility = View.GONE
                     tvLocationCoords.visibility = View.GONE
@@ -419,8 +433,30 @@ class ProfileFragment : Fragment() {
         val sliderRadius = currentView.findViewById<Slider>(R.id.sliderRadius)
         val tvRadiusValue = currentView.findViewById<TextView>(R.id.tvRadiusValue)
 
+        // Define radius values: 100, 200, 500, 1000, 5000, 10000
+        val radiusValues = listOf(100, 200, 500, 1000, 5000, 10000)
+
+        // Set yellow color for active track and thumb
+        val yellowColor = ContextCompat.getColor(requireContext(), R.color.secondary_yellow)
+        val yellowColorStateList = ColorStateList.valueOf(yellowColor)
+        sliderRadius.thumbTintList = yellowColorStateList
+        
+        // Set red color for inactive track
+        val redColor = ContextCompat.getColor(requireContext(), R.color.accent_red)
+        sliderRadius.trackInactiveTintList = ColorStateList.valueOf(redColor)
+        
+        // Set yellow color for active track
+        sliderRadius.trackActiveTintList = yellowColorStateList
+
+        // Set label formatter to show actual radius values
+        sliderRadius.setLabelFormatter { value ->
+            val index = value.toInt().coerceIn(0, radiusValues.size - 1)
+            "${radiusValues[index]} m"
+        }
+
         sliderRadius.addOnChangeListener { _, value, _ ->
-            tvRadiusValue.text = "${value.toInt()} m"
+            val index = value.toInt().coerceIn(0, radiusValues.size - 1)
+            tvRadiusValue.text = "${radiusValues[index]} m"
         }
     }
 
@@ -428,6 +464,9 @@ class ProfileFragment : Fragment() {
         val currentView = view ?: return
         val btnUpdateRange = currentView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnUpdateRange)
         val sliderRadius = currentView.findViewById<Slider>(R.id.sliderRadius)
+
+        // Define radius values: 100, 200, 500, 1000, 5000, 10000
+        val radiusValues = listOf(100, 200, 500, 1000, 5000, 10000)
 
         btnUpdateRange.setOnClickListener {
             val user = PreferenceData.getInstance().getUser(context)
@@ -450,7 +489,9 @@ class ProfileFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val newRadius = sliderRadius.value.toDouble()
+            // Get radius value from slider index
+            val index = sliderRadius.value.toInt().coerceIn(0, radiusValues.size - 1)
+            val newRadius = radiusValues[index].toDouble()
             PreferenceData.getInstance().setCurrentLocation(context, currentLocation.first, currentLocation.second, newRadius)
             viewModel.updateGeofence(user.access, currentLocation.first, currentLocation.second, newRadius)
         }

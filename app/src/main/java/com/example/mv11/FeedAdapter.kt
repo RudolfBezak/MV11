@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 
 data class MyItem(val id: Int, val imageResource: Int, val text: String) {
     override fun equals(other: Any?): Boolean {
@@ -44,8 +45,35 @@ class FeedAdapter : RecyclerView.Adapter<FeedAdapter.FeedViewHolder>() {
     override fun onBindViewHolder(holder: FeedViewHolder, position: Int) {
         val user = users[position]
         val textView = holder.itemView.findViewById<TextView>(R.id.item_text)
-        textView.text = "${user.name}\nUID: ${user.uid}\nLat: ${String.format("%.4f", user.lat)}, Lon: ${String.format("%.4f", user.lon)}"
-        holder.itemView.findViewById<ImageView>(R.id.item_image).setImageResource(R.drawable.profile_foreground)
+        val imageView = holder.itemView.findViewById<ImageView>(R.id.item_image)
+        
+        // Build text - only show lat/lon if coordinates are available (not 0.0)
+        val hasCoordinates = user.lat != 0.0 && user.lon != 0.0
+        val text = if (hasCoordinates) {
+            val latText = String.format("%.6f", user.lat)
+            val lonText = String.format("%.6f", user.lon)
+            "${user.name}\nUID: ${user.uid}\nLat: $latText\nLon: $lonText"
+        } else {
+            "${user.name}\nUID: ${user.uid}"
+        }
+        textView.text = text
+        
+        // Load photo from URL if available
+        if (user.photo.isNotEmpty()) {
+            // Clean photo path - remove "../" if present
+            val cleanPhotoPath = user.photo.replace("../", "")
+            // Build full URL with prefix
+            val photoUrl = "https://upload.mcomputing.eu/$cleanPhotoPath"
+            Glide.with(holder.itemView.context)
+                .load(photoUrl)
+                .placeholder(R.drawable.profile_foreground)
+                .error(R.drawable.profile_foreground)
+                .circleCrop()
+                .into(imageView)
+        } else {
+            // Use default image if no photo
+            imageView.setImageResource(R.drawable.profile_foreground)
+        }
     }
 
     override fun getItemCount() = users.size
