@@ -32,6 +32,9 @@
     <string name="hint_name">Vaše meno</string>
     <string name="hint_email_placeholder">vas@email.com</string>
     <string name="btn_register">Zaregistrovať sa</string>
+    <string name="registration_success">Registrácia úspešná!</string>
+    <string name="error_username_exists">Používateľské meno už existuje. Vyberte si iné používateľské meno.</string>
+    <string name="error_email_exists">Email už existuje. Vyberte si iný email.</string>
     
     <!-- Profile Fragment -->
     <string name="profile_title">Profil používateľa</string>

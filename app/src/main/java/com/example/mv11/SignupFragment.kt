@@ -41,31 +41,21 @@ class SignupFragment : Fragment() {
                     Log.d("SignupFragment", "Access token: ${user.access}, length: ${user.access.length}")
                     Log.d("SignupFragment", "Refresh token: ${user.refresh}, length: ${user.refresh.length}")
 
-                    if (user.access.isNotEmpty()) {
-                        PreferenceData.getInstance().putUser(context, user)
-                        Log.d("SignupFragment", "User saved to SharedPreferences with access token")
-                        
-                        Snackbar.make(
-                            view.findViewById(R.id.submitButton),
-                            "Registration successful!",
-                            Snackbar.LENGTH_SHORT
-                        ).show()
-                        findNavController().navigate(R.id.feedFragment)
-                    } else {
-                        Log.w("SignupFragment", "Access token is empty after registration")
-                        Snackbar.make(
-                            view.findViewById(R.id.submitButton),
-                            "Registration successful! Please login to continue.",
-                            Snackbar.LENGTH_SHORT
-                        ).show()
-                        findNavController().navigate(R.id.prihlasenieFragment)
-                    }
+                    PreferenceData.getInstance().putUser(context, user)
+                    Log.d("SignupFragment", "User saved to SharedPreferences with access token")
+                    
+                    Snackbar.make(
+                        view.findViewById(R.id.submitButton),
+                        getString(R.string.registration_success),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                    findNavController().navigate(R.id.feedFragment)
                 } ?: run {
                     Log.e("SignupFragment", "Registration failed: ${result.first}")
                     Snackbar.make(
                         view.findViewById(R.id.submitButton),
                         result.first,
-                        Snackbar.LENGTH_SHORT
+                        Snackbar.LENGTH_LONG
                     ).show()
                 }
             }

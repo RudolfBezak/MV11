@@ -51,6 +51,26 @@ class DataRepository private constructor(
                 Log.d(TAG, "Response body: $body")
                 
                 if (body != null) {
+                    Log.d(TAG, "Registration response: uid=${body.uid}, access=${body.access}, refresh=${body.refresh}")
+                    
+                    // Check if username already exists (uid = -1)
+                    if (body.uid == "-1") {
+                        Log.e(TAG, "Username already exists")
+                        return Pair("Používateľské meno už existuje. Vyberte si iné používateľské meno.", null)
+                    }
+                    
+                    // Check if email already exists (uid = -2)
+                    if (body.uid == "-2") {
+                        Log.e(TAG, "Email already exists")
+                        return Pair("Email už existuje. Vyberte si iný email.", null)
+                    }
+                    
+                    // Check if access token is empty (registration failed for other reason)
+                    if (body.access.isEmpty()) {
+                        Log.e(TAG, "Access token is empty after registration")
+                        return Pair("Registrácia zlyhala. Skúste to znova.", null)
+                    }
+                    
                     Log.d(TAG, "User created successfully: uid=${body.uid}")
                     return Pair("", User(username, email, body.uid, body.access, body.refresh))
                 } else {
