@@ -173,7 +173,7 @@ class MapFragment : Fragment() {
             style.addLayer(
                 fillLayer(layerId, sourceId) {
                     fillColor("#FFD500") // Yellow color
-                    fillOpacity(0.3)
+                    fillOpacity(0.1)
                 }
             )
             
