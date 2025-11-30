@@ -38,6 +38,7 @@ class LocationSyncWorker(
             val result = repository.apiListGeofence(accessToken)
 
             if (result.second) {
+                // result.third contains GeofenceMe object, but we don't need it in Worker
                 Log.d(TAG, "Location sync successful")
                 NotificationHelper.showNotification(
                     applicationContext,

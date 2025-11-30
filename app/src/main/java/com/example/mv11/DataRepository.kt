@@ -170,10 +170,10 @@ class DataRepository private constructor(
         }
     }
 
-    suspend fun apiListGeofence(accessToken: String): Pair<String, Boolean> {
+    suspend fun apiListGeofence(accessToken: String): Triple<String, Boolean, GeofenceMe?> {
         if (accessToken.isEmpty()) {
             Log.e(TAG, "Access token is empty")
-            return Pair("Access token nemôže byť prázdny", false)
+            return Triple("Access token nemôže byť prázdny", false, null)
         }
         
         try {
@@ -218,7 +218,7 @@ class DataRepository private constructor(
                     if (body.list.isEmpty()) {
                         Log.w(TAG, "Geofence list is empty - user needs to enable geofence")
                         cache.deleteUserItems() // Clear database
-                        return Pair("MUSIS_SI_ZAPNUT_GEOFENCE", false)
+                        return Triple("MUSIS_SI_ZAPNUT_GEOFENCE", false, body.me)
                     }
 
                     Log.d(TAG, "Received ${body.list.size} users from API")
@@ -247,24 +247,24 @@ class DataRepository private constructor(
                     }
                     cache.insertUserItems(users)
                     Log.d(TAG, "Users saved to database (old data cleared)")
-                    return Pair("", true)
+                    return Triple("", true, body.me)
                 } else {
                     Log.e(TAG, "Response body is null")
-                    return Pair("Server returned empty response", false)
+                    return Triple("Server returned empty response", false, null)
                 }
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
-                return Pair("Failed to load users: ${response.message()}", false)
+                return Triple("Failed to load users: ${response.message()}", false, null)
             }
         } catch (ex: IOException) {
             Log.e(TAG, "IOException: ${ex.message}", ex)
             ex.printStackTrace()
-            return Pair("Skontrolujte internetové pripojenie. Nepodarilo sa načítať používateľov.", false)
+            return Triple("Skontrolujte internetové pripojenie. Nepodarilo sa načítať používateľov.", false, null)
         } catch (ex: Exception) {
             Log.e(TAG, "Exception: ${ex.message}", ex)
             ex.printStackTrace()
-            return Pair("Chyba: ${ex.message}", false)
+            return Triple("Chyba: ${ex.message}", false, null)
         }
     }
 

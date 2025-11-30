@@ -110,19 +110,30 @@ class MapFragment : Fragment(R.layout.fragment_map) {
             }
         }
         
-        // Observe current user location from SharedPreferences
-        val currentLocation = PreferenceData.getInstance().getCurrentLocation(requireContext())
-        if (currentLocation != null && currentLocation.first != 0.0 && currentLocation.second != 0.0) {
-            val userList = viewModel.feed_items.value?.filterNotNull() ?: emptyList()
-            addCurrentUserMarker(currentLocation.first, currentLocation.second, currentLocation.third, userList)
+        // Observe "me" object from API response and users list
+        viewModel.meObject.observe(viewLifecycleOwner) { me ->
+            val users = viewModel.feed_items.value?.filterNotNull() ?: emptyList()
+            if (me != null && me.lat.isNotEmpty() && me.lon.isNotEmpty()) {
+                val lat = me.lat.toDoubleOrNull() ?: 0.0
+                val lon = me.lon.toDoubleOrNull() ?: 0.0
+                val radius = me.radius.toDoubleOrNull() ?: 100.0
+                if (lat != 0.0 && lon != 0.0) {
+                    addCurrentUserMarker(lat, lon, radius, users)
+                }
+            }
         }
         
-        // Also observe changes in location and users list
+        // Also observe changes in users list when "me" object is available
         viewModel.feed_items.observe(viewLifecycleOwner) { users ->
-            val currentLocation = PreferenceData.getInstance().getCurrentLocation(requireContext())
-            if (currentLocation != null && currentLocation.first != 0.0 && currentLocation.second != 0.0) {
-                val userList = users.filterNotNull()
-                addCurrentUserMarker(currentLocation.first, currentLocation.second, currentLocation.third, userList)
+            val me = viewModel.meObject.value
+            if (me != null && me.lat.isNotEmpty() && me.lon.isNotEmpty()) {
+                val lat = me.lat.toDoubleOrNull() ?: 0.0
+                val lon = me.lon.toDoubleOrNull() ?: 0.0
+                val radius = me.radius.toDoubleOrNull() ?: 100.0
+                if (lat != 0.0 && lon != 0.0) {
+                    val userList = users.filterNotNull()
+                    addCurrentUserMarker(lat, lon, radius, userList)
+                }
             }
         }
     }
@@ -155,9 +166,10 @@ class MapFragment : Fragment(R.layout.fragment_map) {
                 }
             }
             
-            // Add markers for other users (without lat/lon) - random positions in circle
-            val usersWithoutLocation = users.filter { it.lat == 0.0 && it.lon == 0.0 }
-            usersWithoutLocation.forEach { user ->
+            // Add markers for OTHER users (not current user) - random positions in circle
+            // Podľa zadania: používateľov umiestnite vo vnútri kružnice na náhodné miesta
+            val otherUsers = users.filter { it.uid != currentUserId }
+            otherUsers.forEach { user ->
                 val randomPosition = generateRandomPositionInCircle(lat, lon, radius)
                 createMarkerWithPhoto(user.name, user.photo, isCurrentUser = false) { bitmap ->
                     val userMarkerOptions = PointAnnotationOptions()

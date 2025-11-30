@@ -70,6 +70,13 @@ class UserFeedViewModel(private val repository: DataRepository) : ViewModel() {
     val loading = MutableLiveData(false)
 
     /**
+     * LiveData pre "me" objekt z API odpovede.
+     * Obsahuje pozíciu aktuálneho používateľa (lat, lon, radius).
+     */
+    private val _meObject = MutableLiveData<GeofenceMe?>()
+    val meObject: LiveData<GeofenceMe?> get() = _meObject
+
+    /**
      * Správa pre používateľa (error alebo success).
      * 
      * Používame Evento aby sa správa zobrazila iba raz (nie pri každej rotácii).
@@ -94,7 +101,8 @@ class UserFeedViewModel(private val repository: DataRepository) : ViewModel() {
     fun updateItems(accessToken: String) {
         viewModelScope.launch {  // Spustiť asynchrónnu operáciu
             loading.postValue(true)
-            val result = repository.apiListGeofence(accessToken)  // Vráti Pair<String, Boolean>
+            val result = repository.apiListGeofence(accessToken)  // Vráti Triple<String, Boolean, GeofenceMe?>
+            _meObject.postValue(result.third)  // Uložiť "me" objekt z API odpovede
             if (!result.second) {
                 _message.postValue(Evento(result.first))  // Poslať správu do UI (error alebo špeciálna správa)
             }
