@@ -6,12 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
 
 class SignupFragment : Fragment() {
 
@@ -72,9 +72,9 @@ class SignupFragment : Fragment() {
         }
 
         view.findViewById<Button>(R.id.submitButton).setOnClickListener {
-            val username = view.findViewById<EditText>(R.id.editText1).text.toString()
-            val email = view.findViewById<EditText>(R.id.editText2).text.toString()
-            val password = view.findViewById<EditText>(R.id.editText3).text.toString()
+            val username = view.findViewById<TextInputEditText>(R.id.editText1).text.toString()
+            val email = view.findViewById<TextInputEditText>(R.id.editText2).text.toString()
+            val password = view.findViewById<TextInputEditText>(R.id.editText3).text.toString()
             
             viewModel.registerUser(username, email, password)
         }

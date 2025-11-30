@@ -27,80 +27,79 @@
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginTop="32dp" />
 
-        <TextView
-            android:id="@+id/label1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_name"
-            style="@style/AppSubtitle"
-            android:layout_marginTop="32dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
-
-        <EditText
-            android:id="@+id/editText1"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:hint="@string/hint_name"
-            android:background="@color/white"
-            android:padding="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/label1"
+            app:startIconDrawable="@android:drawable/ic_menu_edit"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="48dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
-        <TextView
-            android:id="@+id/label2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_email"
-            style="@style/AppSubtitle"
-            android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editText1" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editText1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:maxLines="1" />
 
-        <EditText
-            android:id="@+id/editText2"
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilEmail"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_email_placeholder"
-            android:background="@color/white"
-            android:padding="16dp"
-            android:inputType="textEmailAddress"
-            app:layout_constraintTop_toBottomOf="@+id/label2"
+            android:hint="@string/hint_email"
+            app:startIconDrawable="@android:drawable/ic_dialog_email"
+            app:layout_constraintTop_toBottomOf="@id/tilName"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <TextView
-            android:id="@+id/label3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Password"
-            style="@style/AppSubtitle"
+            app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editText2" />
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
-        <EditText
-            android:id="@+id/editText3"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editText2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilPassword"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:hint="Enter password"
-            android:background="@color/white"
-            android:padding="16dp"
-            android:inputType="textPassword"
-            app:layout_constraintTop_toBottomOf="@+id/label3"
+            android:hint="@string/hint_password"
+            app:startIconDrawable="@android:drawable/ic_lock_lock"
+            app:endIconMode="password_toggle"
+            app:layout_constraintTop_toBottomOf="@id/tilEmail"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
-        <Button
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editText3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/submitButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/btn_register"
             style="@style/AccentButton"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="24dp"
             android:layout_marginBottom="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/editText3"
+            app:layout_constraintTop_toBottomOf="@+id/tilPassword"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

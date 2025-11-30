@@ -102,6 +102,53 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
+        <TextView
+            android:id="@+id/labelLocationSharing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_location_sharing"
+            style="@style/AppSubtitle"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvUserUid" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/locationSharingContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:background="@drawable/profile_info_background"
+            android:padding="16dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/labelLocationSharing"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/tvLocationSharingLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/label_location_sharing"
+                android:textColor="@color/secondary_yellow"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/switchLocationSharing"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchLocationSharing"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
         <Button
             android:id="@+id/btnLogout"
             android:layout_width="0dp"
@@ -111,7 +158,7 @@
             android:layout_marginTop="32dp"
             android:layout_marginBottom="16dp"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@+id/tvUserUid"
+            app:layout_constraintTop_toBottomOf="@+id/locationSharingContainer"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -125,6 +172,19 @@
             android:layout_marginBottom="16dp"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@+id/tvSubtitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <Button
+            android:id="@+id/btnRegister"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_register_profile"
+            style="@style/PrimaryButton"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/btnLogin"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

@@ -23,10 +23,10 @@
             android:layout_height="wrap_content"
             android:text="@string/feed_title"
             style="@style/AppTitle"
-            app:layout_constraintTop_toBottomOf="@id/buttonContainer"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="0dp"/>
+            android:layout_marginTop="32dp"/>
         
         <TextView
             android:id="@+id/tvSubtitle"
@@ -48,36 +48,6 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
-
-        <LinearLayout
-        android:id="@+id/buttonContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="8dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-          <LinearLayout
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:gravity="center"
-              android:orientation="horizontal">
-              <Button android:id="@+id/btnAdd" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pridať"/>
-              <Button android:id="@+id/btnRemove" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Odobrať"/>
-              <Button android:id="@+id/btnChange" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Zmeniť 1"/>
-          </LinearLayout>
-          <LinearLayout
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:gravity="center"
-              android:orientation="horizontal">
-              <Button android:id="@+id/btnChangeRange" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Zmeniť 2"/>
-              <Button android:id="@+id/btnReset" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Reset"/>
-              <Button android:id="@+id/btnCoroutines" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Coroutines"/>
-          </LinearLayout>
-
-      </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

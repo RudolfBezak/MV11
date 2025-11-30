@@ -78,6 +78,30 @@ class PreferenceData private constructor() {
         return User.fromJson(json)
     }
 
+    /**
+     * Uloží stav zdieľania polohy do SharedPreferences.
+     * 
+     * @param context - kontext aplikácie
+     * @param enabled - true ak je zdieľanie polohy zapnuté, false ak je vypnuté
+     */
+    fun setLocationSharingEnabled(context: Context?, enabled: Boolean) {
+        val sharedPref = getSharedPreferences(context) ?: return
+        val editor = sharedPref.edit()
+        editor.putBoolean(locationSharingKey, enabled)
+        editor.apply()
+    }
+
+    /**
+     * Načíta stav zdieľania polohy z SharedPreferences.
+     * 
+     * @param context - kontext aplikácie
+     * @return true ak je zdieľanie polohy zapnuté, false ak je vypnuté (default: false)
+     */
+    fun getLocationSharingEnabled(context: Context?): Boolean {
+        val sharedPref = getSharedPreferences(context) ?: return false
+        return sharedPref.getBoolean(locationSharingKey, false)
+    }
+
     companion object {
         /**
          * Singleton inštancia PreferenceData.
@@ -113,6 +137,11 @@ class PreferenceData private constructor() {
          * Kľúč pre uloženie User objektu v SharedPreferences.
          */
         private const val userKey = "userKey"
+
+        /**
+         * Kľúč pre uloženie stavu zdieľania polohy v SharedPreferences.
+         */
+        private const val locationSharingKey = "locationSharingEnabled"
     }
 }
 

@@ -7,6 +7,9 @@
     <string name="intro_title">Vitajte v aplikácii</string>
     <string name="btn_login">Prihlásenie</string>
     <string name="btn_signup">Registrácia</string>
+    <string name="btn_map">Mapa</string>
+    <string name="btn_users">Užívatelia</string>
+    <string name="btn_profile">Profil</string>
     
     <!-- Login Fragment -->
     <string name="login_title">Vitajte v Appke</string>
@@ -36,8 +39,10 @@
     <string name="label_name_profile">Meno:</string>
     <string name="label_email_profile">Email:</string>
     <string name="label_uid">UID:</string>
+    <string name="label_location_sharing">Zdieľanie polohy</string>
     <string name="btn_logout">Odhlásiť sa</string>
     <string name="btn_login_profile">Prihlásiť sa</string>
+    <string name="btn_register_profile">Zaregistrovať sa</string>
     <string name="no_user_logged_in">Nie ste prihlásený</string>
     <string name="logout_success">Odhlásenie úspešné</string>
     <string name="logout_error">Chyba pri odhlásení</string>
@@ -46,7 +51,7 @@
     
     <!-- Feed Fragment -->
     <string name="feed_title">Zoznam</string>
-    <string name="feed_subtitle">Aktuálne ponuky a produkty</string>
+    <string name="feed_subtitle">Aktuálne ponuky</string>
     <string name="feed_item_image">Obrázok položky</string>
     
     <!-- Map Fragment -->

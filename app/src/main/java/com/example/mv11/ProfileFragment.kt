@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import com.google.android.material.switchmaterial.SwitchMaterial
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -64,6 +65,7 @@ class ProfileFragment : Fragment() {
         }
 
         setupClickListeners()
+        setupLocationSharingToggle()
 
         val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
         bottomNav.setActiveItem(BottomNavItem.PROFILE)
@@ -83,8 +85,12 @@ class ProfileFragment : Fragment() {
         val tvUserEmail = currentView.findViewById<TextView>(R.id.tvUserEmail)
         val labelUid = currentView.findViewById<TextView>(R.id.labelUid)
         val tvUserUid = currentView.findViewById<TextView>(R.id.tvUserUid)
+        val labelLocationSharing = currentView.findViewById<TextView>(R.id.labelLocationSharing)
+        val locationSharingContainer = currentView.findViewById<View>(R.id.locationSharingContainer)
+        val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
         val btnLogout = currentView.findViewById<Button>(R.id.btnLogout)
         val btnLogin = currentView.findViewById<Button>(R.id.btnLogin)
+        val btnRegister = currentView.findViewById<Button>(R.id.btnRegister)
 
         if (user != null) {
             tvUserName.text = user.name
@@ -97,8 +103,15 @@ class ProfileFragment : Fragment() {
             tvUserEmail.visibility = View.VISIBLE
             labelUid.visibility = View.VISIBLE
             tvUserUid.visibility = View.VISIBLE
+            labelLocationSharing.visibility = View.VISIBLE
+            locationSharingContainer.visibility = View.VISIBLE
             btnLogout.visibility = View.VISIBLE
             btnLogin.visibility = View.GONE
+            btnRegister.visibility = View.GONE
+
+            // Load location sharing preference
+            val locationSharingEnabled = PreferenceData.getInstance().getLocationSharingEnabled(context)
+            switchLocationSharing.isChecked = locationSharingEnabled
         } else {
             labelName.visibility = View.GONE
             tvUserName.visibility = View.GONE
@@ -106,18 +119,26 @@ class ProfileFragment : Fragment() {
             tvUserEmail.visibility = View.GONE
             labelUid.visibility = View.GONE
             tvUserUid.visibility = View.GONE
+            labelLocationSharing.visibility = View.GONE
+            locationSharingContainer.visibility = View.GONE
             btnLogout.visibility = View.GONE
             btnLogin.visibility = View.VISIBLE
+            btnRegister.visibility = View.VISIBLE
         }
     }
 
     private fun setupClickListeners() {
         val currentView = view ?: return
         val btnLogin = currentView.findViewById<Button>(R.id.btnLogin)
+        val btnRegister = currentView.findViewById<Button>(R.id.btnRegister)
         val btnLogout = currentView.findViewById<Button>(R.id.btnLogout)
 
         btnLogin.setOnClickListener {
-            findNavController().navigate(R.id.action_profile_to_prihlasenie)
+            findNavController().navigate(R.id.prihlasenieFragment)
+        }
+
+        btnRegister.setOnClickListener {
+          findNavController().navigate(R.id.signupFragment)
         }
 
         btnLogout.setOnClickListener {
@@ -148,6 +169,16 @@ class ProfileFragment : Fragment() {
                     Snackbar.LENGTH_SHORT
                 ).show()
             }
+        }
+    }
+
+    private fun setupLocationSharingToggle() {
+        val currentView = view ?: return
+        val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
+
+        switchLocationSharing.setOnCheckedChangeListener { _, isChecked ->
+            PreferenceData.getInstance().setLocationSharingEnabled(context, isChecked)
+            Log.d("ProfileFragment", "Location sharing ${if (isChecked) "enabled" else "disabled"}")
         }
     }
 }

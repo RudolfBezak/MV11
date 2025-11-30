@@ -17,6 +17,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.3"/>
 
+    <!-- Buttons for non-logged in users -->
     <Button
         android:id="@+id/button1"
         android:layout_width="0dp"
@@ -40,6 +41,49 @@
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
         app:layout_constraintTop_toBottomOf="@+id/button1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Buttons for logged in users -->
+    <Button
+        android:id="@+id/buttonMap"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_map"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <Button
+        android:id="@+id/buttonUsers"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_users"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/buttonMap"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <Button
+        android:id="@+id/buttonProfile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_profile"
+        style="@style/AccentButton"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/buttonUsers"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 

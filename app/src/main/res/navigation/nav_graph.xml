@@ -16,6 +16,18 @@
         <action
             android:id="@+id/action_intro_to_signup"
             app:destination="@id/signupFragment" />
+
+        <action
+            android:id="@+id/action_intro_to_map"
+            app:destination="@id/mapFragment" />
+
+        <action
+            android:id="@+id/action_intro_to_feed"
+            app:destination="@id/feedFragment" />
+
+        <action
+            android:id="@+id/action_intro_to_profile"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment
@@ -60,8 +72,12 @@
         android:label="Profil">
 
         <action
-            android:id="@+id/action_profile_to_prihlasenie"
+            android:id="@+id/action_profile_to_signin"
             app:destination="@id/prihlasenieFragment" />
+
+        <action
+            android:id="@+id/action_profile_to_signup"
+            app:destination="@id/signupFragment" />
     </fragment>
 
     <fragment

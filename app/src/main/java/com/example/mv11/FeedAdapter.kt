@@ -31,7 +31,7 @@ data class MyItem(val id: Int, val imageResource: Int, val text: String) {
 }
 
 class FeedAdapter : RecyclerView.Adapter<FeedAdapter.FeedViewHolder>() {
-    private var items: MutableList<MyItem> = mutableListOf()
+    private var users: MutableList<UserEntity> = mutableListOf()
 
     class FeedViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
@@ -42,49 +42,18 @@ class FeedAdapter : RecyclerView.Adapter<FeedAdapter.FeedViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: FeedViewHolder, position: Int) {
-        holder.itemView.findViewById<ImageView>(R.id.item_image).setImageResource(items[position].imageResource)
-        holder.itemView.findViewById<TextView>(R.id.item_text).text = items[position].text
+        val user = users[position]
+        val textView = holder.itemView.findViewById<TextView>(R.id.item_text)
+        textView.text = "${user.name}\nUID: ${user.uid}\nLat: ${String.format("%.4f", user.lat)}, Lon: ${String.format("%.4f", user.lon)}"
+        holder.itemView.findViewById<ImageView>(R.id.item_image).setImageResource(R.drawable.profile_foreground)
     }
 
-    override fun getItemCount() = items.size
+    override fun getItemCount() = users.size
 
-    // Metóda pre notifyDataSetChanged()
-    fun resetItems(newItems: List<MyItem>) {
-        items.clear()
-        items.addAll(newItems)
-        notifyDataSetChanged() // Prekreslí celý zoznam
-    }
-
-    // Metóda pre notifyItemInserted()
-    fun addItem(item: MyItem) {
-        items.add(0, item)
-        notifyItemInserted(0) // Informuje o pridaní položky na pozícii 0
-    }
-
-    // Metóda pre notifyItemRemoved()
-    fun removeItem() {
-        if (items.isNotEmpty()) {
-            items.removeAt(0)
-            notifyItemRemoved(0) // Informuje o odstránení položky na pozícii 0
-        }
-    }
-
-    // Metóda pre notifyItemChanged()
-    fun changeFirstItem() {
-        if (items.isNotEmpty()) {
-            val updatedItem = items[0].copy(text = "Zmenený text! (${System.currentTimeMillis()})")
-            items[0] = updatedItem
-            notifyItemChanged(0) // Informuje o zmene položky na pozícii 0
-        }
-    }
-
-    // Metóda pre notifyItemRangeChanged()
-    fun changeRangeOfItems() {
-        if (items.size >= 2) {
-            items[0] = items[0].copy(text = "Zmenený rozsah 1")
-            items[1] = items[1].copy(text = "Zmenený rozsah 2")
-            notifyItemRangeChanged(0, 2) // Informuje o zmene 2 položiek od pozície 0
-        }
+    fun updateUsers(newUsers: List<UserEntity>) {
+        users.clear()
+        users.addAll(newUsers)
+        notifyDataSetChanged()
     }
 }
 
