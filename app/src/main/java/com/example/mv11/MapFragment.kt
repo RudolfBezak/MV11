@@ -88,19 +88,21 @@ class MapFragment : Fragment() {
         // Observe current user location from SharedPreferences
         val currentLocation = PreferenceData.getInstance().getCurrentLocation(requireContext())
         if (currentLocation != null && currentLocation.first != 0.0 && currentLocation.second != 0.0) {
-            addCurrentUserMarker(currentLocation.first, currentLocation.second, currentLocation.third)
+            val userList = viewModel.feed_items.value?.filterNotNull() ?: emptyList()
+            addCurrentUserMarker(currentLocation.first, currentLocation.second, currentLocation.third, userList)
         }
         
-        // Also observe changes in location
+        // Also observe changes in location and users list
         viewModel.feed_items.observe(viewLifecycleOwner) { users ->
             val currentLocation = PreferenceData.getInstance().getCurrentLocation(requireContext())
             if (currentLocation != null && currentLocation.first != 0.0 && currentLocation.second != 0.0) {
-                addCurrentUserMarker(currentLocation.first, currentLocation.second, currentLocation.third)
+                val userList = users.filterNotNull()
+                addCurrentUserMarker(currentLocation.first, currentLocation.second, currentLocation.third, userList)
             }
         }
     }
     
-    private fun addCurrentUserMarker(lat: Double, lon: Double, radius: Double) {
+    private fun addCurrentUserMarker(lat: Double, lon: Double, radius: Double, users: List<UserEntity>) {
         mapView?.let { map ->
             // Clear existing markers
             pointAnnotationManager?.deleteAll()
@@ -118,6 +120,18 @@ class MapFragment : Fragment() {
             
             pointAnnotationManager?.create(pointAnnotationOptions)
             
+            // Add markers for other users (without lat/lon) - random positions in circle
+            val usersWithoutLocation = users.filter { it.lat == 0.0 && it.lon == 0.0 }
+            usersWithoutLocation.forEach { user ->
+                val randomPosition = generateRandomPositionInCircle(lat, lon, radius)
+                val userMarkerOptions = PointAnnotationOptions()
+                    .withPoint(Point.fromLngLat(randomPosition.second, randomPosition.first))
+                    .withIconImage(createMarkerBitmap(user.name))
+                
+                pointAnnotationManager?.create(userMarkerOptions)
+                Log.d("MapFragment", "Pridávam marker pre používateľa: ${user.name} na náhodnej pozícii [${randomPosition.first}, ${randomPosition.second}]")
+            }
+            
             // Add circle around current user
             addCircleAroundUser(lat, lon, radius)
             
@@ -129,6 +143,28 @@ class MapFragment : Fragment() {
                     .build()
             )
         }
+    }
+    
+    private fun generateRandomPositionInCircle(centerLat: Double, centerLon: Double, radiusMeters: Double): Pair<Double, Double> {
+        // Generate random angle (0 to 2π)
+        val randomAngle = Math.random() * 2 * Math.PI
+        
+        // Generate random distance (0 to radius) - using square root for uniform distribution
+        val randomDistance = Math.sqrt(Math.random()) * radiusMeters
+        
+        // Convert distance from meters to degrees
+        val latRad = Math.toRadians(centerLat)
+        val metersPerDegreeLat = 111320.0
+        val metersPerDegreeLon = 111320.0 * Math.cos(latRad)
+        
+        val distanceLat = randomDistance / metersPerDegreeLat
+        val distanceLon = randomDistance / metersPerDegreeLon
+        
+        // Calculate new position
+        val newLat = centerLat + distanceLat * Math.cos(randomAngle)
+        val newLon = centerLon + distanceLon * Math.sin(randomAngle)
+        
+        return Pair(newLat, newLon)
     }
     
     private fun addCircleAroundUser(lat: Double, lon: Double, radiusMeters: Double) {
