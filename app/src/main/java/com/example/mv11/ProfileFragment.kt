@@ -19,7 +19,11 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
+import android.app.PendingIntent
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.slider.Slider
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -33,6 +37,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private var binding: FragmentProfileBinding? = null
     private lateinit var viewModel: AuthViewModel
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var geofencingClient: GeofencingClient
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
     private val DEFAULT_RADIUS = 100.0
     private var currentPhotoUri: Uri? = null
@@ -61,6 +66,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        geofencingClient = LocationServices.getGeofencingClient(requireActivity())
 
         updateUI()
 
@@ -126,6 +132,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     if (result.second) {
                         Log.d("ProfileFragment", "Geofence deleted successfully")
                         PreferenceData.getInstance().clearCurrentLocation(context)
+                        removeGeofence()
                         updateUI()
                         Snackbar.make(
                             bnd.switchLocationSharing,
@@ -398,6 +405,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 } else {
                     PreferenceData.getInstance().setLocationSharingEnabled(context, false)
                     viewModel.deleteGeofence(user.access)
+                    removeGeofence()
                 }
             }
         }
@@ -455,13 +463,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             return
         }
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+        fusedLocationClient.lastLocation.addOnSuccessListener(requireActivity()) { location: Location? ->
             binding?.let { bnd ->
                 if (location != null) {
-                    Log.d("ProfileFragment", "Location: lat=${location.latitude}, lon=${location.longitude}")
+                    Log.d("ProfileFragment", "poloha posledna $location")
                     PreferenceData.getInstance().setLocationSharingEnabled(context, true)
                     PreferenceData.getInstance().setCurrentLocation(context, location.latitude, location.longitude, DEFAULT_RADIUS)
                     viewModel.updateGeofence(accessToken, location.latitude, location.longitude, DEFAULT_RADIUS)
+                    setupGeofence(location)
                     updateUI()
                 } else {
                     Log.e("ProfileFragment", "Location is null")
@@ -484,6 +493,74 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     getString(R.string.location_error),
                     Snackbar.LENGTH_LONG
                 ).show()
+            }
+        }
+    }
+
+    private fun setupGeofence(location: Location) {
+        val currentLocation = PreferenceData.getInstance().getCurrentLocation(context)
+        val radius = (currentLocation?.third ?: DEFAULT_RADIUS).toFloat()
+
+        val geofence = Geofence.Builder()
+            .setRequestId("my-geofence")
+            .setCircularRegion(location.latitude, location.longitude, radius)
+            .setExpirationDuration(Geofence.NEVER_EXPIRE)
+            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_EXIT)
+            .build()
+
+        val geofencingRequest = GeofencingRequest.Builder()
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            .addGeofence(geofence)
+            .build()
+
+        val intent = Intent(requireActivity(), GeofenceBroadcastReceiver::class.java)
+        val geofencePendingIntent = PendingIntent.getBroadcast(
+            requireActivity(),
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e("ProfileFragment", "Permission denied for geofencing")
+            return
+        }
+
+        geofencingClient.removeGeofences(geofencePendingIntent).addOnCompleteListener {
+            geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent).run {
+                addOnSuccessListener {
+                    Log.d("ProfileFragment", "geofence vytvoreny")
+                }
+                addOnFailureListener {
+                    it.printStackTrace()
+                    binding?.let { bnd ->
+                        bnd.switchLocationSharing.isChecked = false
+                        PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun removeGeofence() {
+        val intent = Intent(requireActivity(), GeofenceBroadcastReceiver::class.java)
+        val geofencePendingIntent = PendingIntent.getBroadcast(
+            requireActivity(),
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        geofencingClient.removeGeofences(geofencePendingIntent).run {
+            addOnSuccessListener {
+                Log.d("ProfileFragment", "geofence odstraneny")
+            }
+            addOnFailureListener {
+                Log.e("ProfileFragment", "Failed to remove geofence: ${it.message}")
             }
         }
     }
@@ -547,6 +624,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 Log.d("ProfileFragment", "Updating radius: index=$index, radius=$newRadius")
                 PreferenceData.getInstance().setCurrentLocation(context, currentLocation.first, currentLocation.second, newRadius)
                 viewModel.updateGeofence(user.access, currentLocation.first, currentLocation.second, newRadius)
+                
+                val location = Location("").apply {
+                    latitude = currentLocation.first
+                    longitude = currentLocation.second
+                }
+                setupGeofence(location)
             }
         }
     }
