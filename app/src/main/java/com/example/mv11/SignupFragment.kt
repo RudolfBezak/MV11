@@ -3,30 +3,19 @@ package com.example.mv11
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.example.mv11.databinding.FragmentSignupBinding
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.textfield.TextInputEditText
 
-class SignupFragment : Fragment() {
+class SignupFragment : Fragment(R.layout.fragment_signup) {
 
+    private var binding: FragmentSignupBinding? = null
     private lateinit var viewModel: AuthViewModel
-    
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_signup, container, false)
-    }
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -37,42 +26,52 @@ class SignupFragment : Fragment() {
             }
         })[AuthViewModel::class.java]
 
-        viewModel.registrationResult.observe(viewLifecycleOwner) { evento ->
-            evento.getContentIfNotHandled()?.let { result ->
-                // Hide keyboard before showing Snackbar
-                hideKeyboard(view)
-                
-                result.second?.let { user ->
-                    Log.d("SignupFragment", "Registration successful: $user")
-                    Log.d("SignupFragment", "Access token: ${user.access}, length: ${user.access.length}")
-                    Log.d("SignupFragment", "Refresh token: ${user.refresh}, length: ${user.refresh.length}")
+        binding = FragmentSignupBinding.bind(view).apply {
+            lifecycleOwner = viewLifecycleOwner
+            this.viewModel = this@SignupFragment.viewModel
+        }
 
-                    PreferenceData.getInstance().putUser(context, user)
-                    Log.d("SignupFragment", "User saved to SharedPreferences with access token")
+        binding?.let { bnd ->
+            viewModel.registrationResult.observe(viewLifecycleOwner) { evento ->
+                evento.getContentIfNotHandled()?.let { result ->
+                    hideKeyboard(bnd.root)
                     
-                    showSnackbar(view, getString(R.string.registration_success), Snackbar.LENGTH_SHORT)
-                    findNavController().navigate(R.id.feedFragment)
-                } ?: run {
-                    Log.e("SignupFragment", "Registration failed: ${result.first}")
-                    showSnackbar(view, result.first, Snackbar.LENGTH_LONG)
+                    result.second?.let { user ->
+                        Log.d("SignupFragment", "Registration successful: $user")
+                        Log.d("SignupFragment", "Access token: ${user.access}, length: ${user.access.length}")
+                        Log.d("SignupFragment", "Refresh token: ${user.refresh}, length: ${user.refresh.length}")
+
+                        PreferenceData.getInstance().putUser(context, user)
+                        Log.d("SignupFragment", "User saved to SharedPreferences with access token")
+                        
+                        showSnackbar(bnd.root, getString(R.string.registration_success), Snackbar.LENGTH_SHORT)
+                        findNavController().navigate(R.id.feedFragment)
+                    } ?: run {
+                        Log.e("SignupFragment", "Registration failed: ${result.first}")
+                        showSnackbar(bnd.root, result.first, Snackbar.LENGTH_LONG)
+                    }
                 }
             }
-        }
 
-        view.findViewById<Button>(R.id.submitButton).setOnClickListener {
-            val username = view.findViewById<TextInputEditText>(R.id.editText1).text.toString()
-            val email = view.findViewById<TextInputEditText>(R.id.editText2).text.toString()
-            val password = view.findViewById<TextInputEditText>(R.id.editText3).text.toString()
+            bnd.submitButton.setOnClickListener {
+                val username = bnd.editText1.text.toString()
+                val email = bnd.editText2.text.toString()
+                val password = bnd.editText3.text.toString()
+                
+                viewModel.registerUser(username, email, password)
+            }
+
+            bnd.tvLogin.setOnClickListener {
+                findNavController().navigate(R.id.action_signup_to_prihlasenie)
+            }
             
-            viewModel.registerUser(username, email, password)
+            bnd.bottomNavigationWidget.setActiveItem(BottomNavItem.LIST)
         }
+    }
 
-        view.findViewById<TextView>(R.id.tvLogin).setOnClickListener {
-            findNavController().navigate(R.id.action_signup_to_prihlasenie)
-        }
-        
-        val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
-        bottomNav.setActiveItem(BottomNavItem.LIST)
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
     }
 
     private fun hideKeyboard(view: View) {
@@ -81,14 +80,15 @@ class SignupFragment : Fragment() {
     }
 
     private fun showSnackbar(view: View, message: String, duration: Int) {
-        val snackbar = Snackbar.make(
-            view.findViewById(R.id.contentContainer),
-            message,
-            duration
-        )
-        // Set anchor to bottom navigation to show above it
-        snackbar.anchorView = view.findViewById(R.id.bottomNavigationWidget)
-        snackbar.show()
+        binding?.let { bnd ->
+            val snackbar = Snackbar.make(
+                bnd.contentContainer,
+                message,
+                duration
+            )
+            snackbar.anchorView = bnd.bottomNavigationWidget
+            snackbar.show()
+        }
     }
 }
 

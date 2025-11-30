@@ -3,31 +3,20 @@ package com.example.mv11
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.button.MaterialButton
+import com.example.mv11.databinding.FragmentPrihlasenieBinding
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.textfield.TextInputEditText
 
-class PrihlasenieFragment : Fragment() {
+class PrihlasenieFragment : Fragment(R.layout.fragment_prihlasenie) {
 
+    private var binding: FragmentPrihlasenieBinding? = null
     private lateinit var viewModel: AuthViewModel
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_prihlasenie, container, false)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -38,83 +27,87 @@ class PrihlasenieFragment : Fragment() {
             }
         })[AuthViewModel::class.java]
 
-        val etEmail = view.findViewById<TextInputEditText>(R.id.etEmail)
-        val etPassword = view.findViewById<TextInputEditText>(R.id.etPassword)
-        val btnLogin = view.findViewById<MaterialButton>(R.id.btnLogin)
-        val tvSignup = view.findViewById<TextView>(R.id.tvSignup)
-        val tvForgotPassword = view.findViewById<TextView>(R.id.tvForgotPassword)
+        binding = FragmentPrihlasenieBinding.bind(view).apply {
+            lifecycleOwner = viewLifecycleOwner
+            this.viewModel = this@PrihlasenieFragment.viewModel
+        }
 
-        viewModel.loginResult.observe(viewLifecycleOwner) { evento ->
-            evento.getContentIfNotHandled()?.let { result ->
-                // Hide keyboard before showing Snackbar
-                hideKeyboard(view)
-                
-                result.second?.let { user ->
-                    Log.d("PrihlasenieFragment", "Login successful: $user")
-                    Log.d("PrihlasenieFragment", "Access token: ${user.access}, length: ${user.access.length}")
-                    Log.d("PrihlasenieFragment", "Refresh token: ${user.refresh}, length: ${user.refresh.length}")
+        binding?.let { bnd ->
+            viewModel.loginResult.observe(viewLifecycleOwner) { evento ->
+                evento.getContentIfNotHandled()?.let { result ->
+                    hideKeyboard(bnd.root)
+                    
+                    result.second?.let { user ->
+                        Log.d("PrihlasenieFragment", "Login successful: $user")
+                        Log.d("PrihlasenieFragment", "Access token: ${user.access}, length: ${user.access.length}")
+                        Log.d("PrihlasenieFragment", "Refresh token: ${user.refresh}, length: ${user.refresh.length}")
 
-                    PreferenceData.getInstance().putUser(context, user)
-                    Log.d("PrihlasenieFragment", "User saved to SharedPreferences")
+                        PreferenceData.getInstance().putUser(context, user)
+                        Log.d("PrihlasenieFragment", "User saved to SharedPreferences")
 
-                    showSnackbar(view, getString(R.string.toast_login_success), Snackbar.LENGTH_SHORT)
-                    findNavController().navigate(R.id.feedFragment)
-                } ?: run {
-                    Log.e("PrihlasenieFragment", "Login failed: ${result.first}")
-                    showSnackbar(view, result.first, Snackbar.LENGTH_LONG)
+                        showSnackbar(bnd.root, getString(R.string.toast_login_success), Snackbar.LENGTH_SHORT)
+                        findNavController().navigate(R.id.feedFragment)
+                    } ?: run {
+                        Log.e("PrihlasenieFragment", "Login failed: ${result.first}")
+                        showSnackbar(bnd.root, result.first, Snackbar.LENGTH_LONG)
+                    }
                 }
             }
-        }
 
-        viewModel.passwordResetResult.observe(viewLifecycleOwner) { evento ->
-            evento.getContentIfNotHandled()?.let { result ->
-                hideKeyboard(view)
-                
-                if (result.second) {
-                    Log.d("PrihlasenieFragment", "Password reset email sent successfully")
-                    showSnackbar(view, getString(R.string.password_reset_email_sent), Snackbar.LENGTH_LONG)
-                } else {
-                    Log.e("PrihlasenieFragment", "Password reset failed: ${result.first}")
-                    showSnackbar(view, result.first, Snackbar.LENGTH_LONG)
+            viewModel.passwordResetResult.observe(viewLifecycleOwner) { evento ->
+                evento.getContentIfNotHandled()?.let { result ->
+                    hideKeyboard(bnd.root)
+                    
+                    if (result.second) {
+                        Log.d("PrihlasenieFragment", "Password reset email sent successfully")
+                        showSnackbar(bnd.root, getString(R.string.password_reset_email_sent), Snackbar.LENGTH_LONG)
+                    } else {
+                        Log.e("PrihlasenieFragment", "Password reset failed: ${result.first}")
+                        showSnackbar(bnd.root, result.first, Snackbar.LENGTH_LONG)
+                    }
                 }
             }
-        }
 
-        btnLogin.setOnClickListener {
-            val email = etEmail.text.toString().trim()
-            val password = etPassword.text.toString().trim()
+            bnd.btnLogin.setOnClickListener {
+                val email = bnd.etEmail.text.toString().trim()
+                val password = bnd.etPassword.text.toString().trim()
 
-            if (email.isEmpty()) {
-                Toast.makeText(context, getString(R.string.toast_enter_email), Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+                if (email.isEmpty()) {
+                    Toast.makeText(context, getString(R.string.toast_enter_email), Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                if (password.isEmpty()) {
+                    Toast.makeText(context, getString(R.string.toast_enter_password), Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                viewModel.loginUser(email, password)
             }
 
-            if (password.isEmpty()) {
-                Toast.makeText(context, getString(R.string.toast_enter_password), Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            bnd.tvSignup.setOnClickListener {
+                findNavController().navigate(R.id.action_prihlasenie_to_signup)
             }
 
-            viewModel.loginUser(email, password)
-        }
-
-        tvSignup.setOnClickListener {
-            findNavController().navigate(R.id.action_prihlasenie_to_signup)
-        }
-
-        tvForgotPassword.setOnClickListener {
-            val email = etEmail.text.toString().trim()
-            
-            if (email.isEmpty()) {
-                showSnackbar(view, getString(R.string.toast_enter_email_for_reset), Snackbar.LENGTH_SHORT)
-                return@setOnClickListener
+            bnd.tvForgotPassword.setOnClickListener {
+                val email = bnd.etEmail.text.toString().trim()
+                
+                if (email.isEmpty()) {
+                    showSnackbar(bnd.root, getString(R.string.toast_enter_email_for_reset), Snackbar.LENGTH_SHORT)
+                    return@setOnClickListener
+                }
+                
+                hideKeyboard(bnd.root)
+                viewModel.resetPassword(email)
             }
-            
-            hideKeyboard(view)
-            viewModel.resetPassword(email)
-        }
 
-        val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
-        bottomNav.setActiveItem(BottomNavItem.PROFILE)
+            bnd.bottomNavigationWidget.setActiveItem(BottomNavItem.PROFILE)
+        }
+    }
+
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
     }
 
     private fun hideKeyboard(view: View) {
@@ -123,13 +116,14 @@ class PrihlasenieFragment : Fragment() {
     }
 
     private fun showSnackbar(view: View, message: String, duration: Int) {
-        val snackbar = Snackbar.make(
-            view.findViewById(R.id.contentContainer),
-            message,
-            duration
-        )
-        // Set anchor to bottom navigation to show above it
-        snackbar.anchorView = view.findViewById(R.id.bottomNavigationWidget)
-        snackbar.show()
+        binding?.let { bnd ->
+            val snackbar = Snackbar.make(
+                bnd.contentContainer,
+                message,
+                duration
+            )
+            snackbar.anchorView = bnd.bottomNavigationWidget
+            snackbar.show()
+        }
     }
 }

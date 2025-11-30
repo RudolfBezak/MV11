@@ -9,13 +9,12 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.example.mv11.databinding.FragmentMapBinding
 import com.google.android.material.snackbar.Snackbar
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
@@ -38,20 +37,13 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 
-class MapFragment : Fragment() {
+class MapFragment : Fragment(R.layout.fragment_map) {
     
+    private var binding: FragmentMapBinding? = null
     private var mapView: MapView? = null
     private lateinit var viewModel: UserFeedViewModel
     private var pointAnnotationManager: com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager? = null
-    private val markerUserIdMap = mutableMapOf<Long, String>() // Map annotation ID to userId
-    
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_map, container, false)
-    }
+    private val markerUserIdMap = mutableMapOf<Long, String>()
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -62,34 +54,39 @@ class MapFragment : Fragment() {
             }
         })[UserFeedViewModel::class.java]
         
-        mapView = view.findViewById(R.id.mapView)
-        mapView?.getMapboxMap()?.loadStyleUri(Style.MAPBOX_STREETS) {
-            setupUserMarkers()
+        binding = FragmentMapBinding.bind(view).apply {
+            lifecycleOwner = viewLifecycleOwner
+            this.viewModel = this@MapFragment.viewModel
         }
         
-        val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
-        bottomNav.setActiveItem(BottomNavItem.MAP)
-        
-        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
-            Log.d("MapFragment", "Loading: $isLoading")
-        }
-        
-        viewModel.message.observe(viewLifecycleOwner) { evento ->
-            evento.getContentIfNotHandled()?.let { message ->
-                if (message.isNotEmpty()) {
-                    if (message == "MUSIS_SI_ZAPNUT_GEOFENCE") {
-                        Snackbar.make(view, "Musíš si zapnúť geofence na videnie používateľov", Snackbar.LENGTH_LONG).show()
-                    } else {
-                        Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show()
+        binding?.let { bnd ->
+            mapView = bnd.mapView
+            mapView?.getMapboxMap()?.loadStyleUri(Style.MAPBOX_STREETS) {
+                setupUserMarkers()
+            }
+            
+            bnd.bottomNavigationWidget.setActiveItem(BottomNavItem.MAP)
+            
+            viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
+                Log.d("MapFragment", "Loading: $isLoading")
+            }
+            
+            viewModel.message.observe(viewLifecycleOwner) { evento ->
+                evento.getContentIfNotHandled()?.let { message ->
+                    if (message.isNotEmpty()) {
+                        if (message == "MUSIS_SI_ZAPNUT_GEOFENCE") {
+                            Snackbar.make(bnd.root, "Musíš si zapnúť geofence na videnie používateľov", Snackbar.LENGTH_LONG).show()
+                        } else {
+                            Snackbar.make(bnd.root, message, Snackbar.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
-        }
-        
-        // Load users on fragment creation
-        val user = PreferenceData.getInstance().getUser(requireContext())
-        if (user != null && user.access.isNotEmpty()) {
-            viewModel.updateItems(user.access)
+            
+            val user = PreferenceData.getInstance().getUser(requireContext())
+            if (user != null && user.access.isNotEmpty()) {
+                viewModel.updateItems(user.access)
+            }
         }
     }
     
@@ -443,6 +440,7 @@ class MapFragment : Fragment() {
         super.onDestroyView()
         mapView?.onDestroy()
         mapView = null
+        binding = null
     }
 }
 

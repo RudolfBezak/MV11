@@ -1,28 +1,18 @@
 package com.example.mv11
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.example.mv11.databinding.FragmentFeedBinding
 import com.google.android.material.snackbar.Snackbar
 
-class UserListFragment : Fragment() {
+class UserListFragment : Fragment(R.layout.fragment_feed) {
 
+    private var binding: FragmentFeedBinding? = null
     private lateinit var viewModel: UserFeedViewModel
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_feed, container, false)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -33,26 +23,37 @@ class UserListFragment : Fragment() {
             }
         })[UserFeedViewModel::class.java]
 
-        val recyclerView = view.findViewById<RecyclerView>(R.id.feed_recyclerview)
-        recyclerView.layoutManager = LinearLayoutManager(context)
+        binding = FragmentFeedBinding.bind(view).apply {
+            lifecycleOwner = viewLifecycleOwner
+            this.viewModel = this@UserListFragment.viewModel
+        }
 
-        viewModel.feed_items.observe(viewLifecycleOwner) { users ->
-            users.filterNotNull().forEach { user ->
-                android.util.Log.d("UserListFragment", "User: ${user.name}, lat: ${user.lat}, lon: ${user.lon}")
+        binding?.let { bnd ->
+            bnd.feedRecyclerview.layoutManager = LinearLayoutManager(context)
+
+            viewModel.feed_items.observe(viewLifecycleOwner) { users ->
+                users.filterNotNull().forEach { user ->
+                    android.util.Log.d("UserListFragment", "User: ${user.name}, lat: ${user.lat}, lon: ${user.lon}")
+                }
             }
-        }
 
-        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
-            android.util.Log.d("UserListFragment", "Loading: $isLoading")
-        }
+            viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
+                android.util.Log.d("UserListFragment", "Loading: $isLoading")
+            }
 
-        viewModel.message.observe(viewLifecycleOwner) { evento ->
-            evento.getContentIfNotHandled()?.let { message ->
-                if (message.isNotEmpty()) {
-                    Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show()
+            viewModel.message.observe(viewLifecycleOwner) { evento ->
+                evento.getContentIfNotHandled()?.let { message ->
+                    if (message.isNotEmpty()) {
+                        Snackbar.make(bnd.root, message, Snackbar.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
     }
 }
 
