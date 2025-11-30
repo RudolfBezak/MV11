@@ -1,19 +1,30 @@
 package com.example.mv11
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.content.res.ColorStateList
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.snackbar.Snackbar
@@ -30,6 +41,16 @@ class ProfileFragment : Fragment() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
     private val DEFAULT_RADIUS = 100.0 // meters
+    private var currentPhotoUri: Uri? = null
+    private var tempImageFile: File? = null
+
+    private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                uploadImage(uri)
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -138,6 +159,14 @@ class ProfileFragment : Fragment() {
         setupChangePasswordClick()
         setupRadiusSlider()
         setupUpdateRangeButton()
+        setupPhotoButtons()
+        observePhotoResults()
+        
+        // Load user photo on fragment creation
+        val user = PreferenceData.getInstance().getUser(context)
+        if (user != null && user.access.isNotEmpty()) {
+            viewModel.getUserProfile(user.access, user.uid)
+        }
 
         val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
         bottomNav.setActiveItem(BottomNavItem.PROFILE)
@@ -171,11 +200,19 @@ class ProfileFragment : Fragment() {
         val btnLogout = currentView.findViewById<Button>(R.id.btnLogout)
         val btnLogin = currentView.findViewById<Button>(R.id.btnLogin)
         val btnRegister = currentView.findViewById<Button>(R.id.btnRegister)
+        val ivUserPhoto = currentView.findViewById<ImageView>(R.id.ivUserPhoto)
+        val btnUploadPhoto = currentView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnUploadPhoto)
+        val btnDeletePhoto = currentView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnDeletePhoto)
 
         if (user != null) {
             tvUserName.text = user.name
             tvUserEmail.text = user.email
             tvUserUid.text = user.uid
+            
+            // Show photo and buttons
+            ivUserPhoto.visibility = View.VISIBLE
+            btnUploadPhoto.visibility = View.VISIBLE
+            btnDeletePhoto.visibility = View.VISIBLE
             
             labelName.visibility = View.VISIBLE
             tvUserName.visibility = View.VISIBLE
@@ -189,6 +226,11 @@ class ProfileFragment : Fragment() {
             btnLogout.visibility = View.VISIBLE
             btnLogin.visibility = View.GONE
             btnRegister.visibility = View.GONE
+            
+            // Load user photo
+            if (user.access.isNotEmpty()) {
+                viewModel.getUserProfile(user.access, user.uid)
+            }
 
             // Load location sharing preference
             val locationSharingEnabled = PreferenceData.getInstance().getLocationSharingEnabled(context)
@@ -236,6 +278,10 @@ class ProfileFragment : Fragment() {
                 btnUpdateRange.visibility = View.GONE
             }
         } else {
+            ivUserPhoto.visibility = View.GONE
+            btnUploadPhoto.visibility = View.GONE
+            btnDeletePhoto.visibility = View.GONE
+            
             labelName.visibility = View.GONE
             tvUserName.visibility = View.GONE
             labelEmail.visibility = View.GONE
@@ -495,6 +541,128 @@ class ProfileFragment : Fragment() {
             Log.d("ProfileFragment", "Updating radius: index=$index, radius=$newRadius")
             PreferenceData.getInstance().setCurrentLocation(context, currentLocation.first, currentLocation.second, newRadius)
             viewModel.updateGeofence(user.access, currentLocation.first, currentLocation.second, newRadius)
+        }
+    }
+
+    private fun setupPhotoButtons() {
+        val currentView = view ?: return
+        val btnUploadPhoto = currentView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnUploadPhoto)
+        val btnDeletePhoto = currentView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnDeletePhoto)
+
+        btnUploadPhoto.setOnClickListener {
+            pickImage()
+        }
+
+        btnDeletePhoto.setOnClickListener {
+            val user = PreferenceData.getInstance().getUser(context)
+            if (user != null && user.access.isNotEmpty()) {
+                viewModel.deletePhoto(user.access)
+            }
+        }
+    }
+
+    private fun observePhotoResults() {
+        viewModel.userProfileResult.observe(viewLifecycleOwner) { evento ->
+            evento.getContentIfNotHandled()?.let { result ->
+                if (result.second != null) {
+                    loadUserPhoto(result.second!!.photo)
+                }
+            }
+        }
+
+        viewModel.photoUploadResult.observe(viewLifecycleOwner) { evento ->
+            evento.getContentIfNotHandled()?.let { result ->
+                val currentView = view ?: return@observe
+                if (result.second != null) {
+                    loadUserPhoto(result.second!!.photo)
+                    Snackbar.make(
+                        currentView.findViewById(R.id.btnUploadPhoto),
+                        getString(R.string.photo_uploaded),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Snackbar.make(
+                        currentView.findViewById(R.id.btnUploadPhoto),
+                        result.first.ifEmpty { getString(R.string.photo_upload_failed) },
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+
+        viewModel.photoDeleteResult.observe(viewLifecycleOwner) { evento ->
+            evento.getContentIfNotHandled()?.let { result ->
+                val currentView = view ?: return@observe
+                if (result.second != null) {
+                    loadUserPhoto("") // Clear photo
+                    Snackbar.make(
+                        currentView.findViewById(R.id.btnDeletePhoto),
+                        getString(R.string.photo_deleted),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Snackbar.make(
+                        currentView.findViewById(R.id.btnDeletePhoto),
+                        result.first.ifEmpty { getString(R.string.photo_delete_failed) },
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun pickImage() {
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        imagePickerLauncher.launch(intent)
+    }
+
+    private fun uploadImage(uri: Uri) {
+        val user = PreferenceData.getInstance().getUser(context)
+        if (user == null || user.access.isEmpty()) {
+            return
+        }
+
+        try {
+            // Convert URI to File
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
+            val tempFile = File(requireContext().cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
+            val outputStream = FileOutputStream(tempFile)
+            
+            inputStream?.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            
+            tempImageFile = tempFile
+            viewModel.uploadPhoto(user.access, tempFile)
+        } catch (e: IOException) {
+            Log.e("ProfileFragment", "Error converting image: ${e.message}")
+            val currentView = view ?: return
+            Snackbar.make(
+                currentView.findViewById(R.id.btnUploadPhoto),
+                getString(R.string.photo_upload_failed),
+                Snackbar.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun loadUserPhoto(photoPath: String) {
+        val currentView = view ?: return
+        val ivUserPhoto = currentView.findViewById<ImageView>(R.id.ivUserPhoto)
+        
+        if (photoPath.isNotEmpty()) {
+            val cleanPhotoPath = photoPath.replace("../", "")
+            val photoUrl = "https://upload.mcomputing.eu/$cleanPhotoPath"
+            Glide.with(this)
+                .load(photoUrl)
+                .placeholder(R.drawable.profile_foreground)
+                .error(R.drawable.profile_foreground)
+                .circleCrop()
+                .into(ivUserPhoto)
+        } else {
+            Glide.with(this).clear(ivUserPhoto)
+            ivUserPhoto.setImageResource(R.drawable.profile_foreground)
         }
     }
 }

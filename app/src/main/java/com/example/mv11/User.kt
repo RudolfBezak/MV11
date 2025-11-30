@@ -129,3 +129,15 @@ data class GeofenceListResponse(
     val list: List<GeofenceUserItem>
 )
 
+data class UserProfileResponse(
+    val id: String,
+    val name: String,
+    val photo: String
+)
+
+data class PhotoUploadResponse(
+    val id: String,
+    val name: String,
+    val photo: String
+)
+

@@ -2,10 +2,17 @@ package com.example.mv11
 
 import android.content.Context
 import android.util.Log
+import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class DataRepository private constructor(
     private val service: ApiService,
+    private val uploadService: UploadApiService,
     private val cache: LocalCache,
     private val context: Context
 ) {
@@ -21,6 +28,7 @@ class DataRepository private constructor(
             INSTANCE ?: synchronized(lock) {
                 INSTANCE ?: DataRepository(
                     ApiService.create(),
+                    UploadApiService.create(),
                     LocalCache(AppRoomDatabase.getInstance(context).appDao()),
                     context
                 ).also { INSTANCE = it }
@@ -467,6 +475,104 @@ class DataRepository private constructor(
             Log.e(TAG, "Exception: ${ex.message}", ex)
             ex.printStackTrace()
             return Pair("Chyba: ${ex.message}", false)
+        }
+    }
+
+    suspend fun apiGetUserProfile(accessToken: String, userId: String): Pair<String, UserProfileResponse?> {
+        if (accessToken.isEmpty()) {
+            Log.e(TAG, "Access token is empty")
+            return Pair("Access token nemôže byť prázdny", null)
+        }
+
+        try {
+            Log.d(TAG, "Fetching user profile for userId: $userId")
+            val authHeader = "Bearer $accessToken"
+            val response = service.getUserProfile(API_KEY, authHeader, userId)
+            Log.d(TAG, "Response code: ${response.code()}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+                if (body != null) {
+                    return Pair("", body)
+                } else {
+                    return Pair("Server returned empty response", null)
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Failed to load profile: ${response.message()}", null)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            return Pair("Network error: ${ex.message}", null)
+        }
+    }
+
+    suspend fun apiUploadPhoto(accessToken: String, imageFile: File): Pair<String, PhotoUploadResponse?> {
+        if (accessToken.isEmpty()) {
+            Log.e(TAG, "Access token is empty")
+            return Pair("Access token nemôže byť prázdny", null)
+        }
+
+        try {
+            Log.d(TAG, "Uploading photo: ${imageFile.absolutePath}")
+            val authHeader = "Bearer $accessToken"
+            
+            // Create request body for image file
+            val requestFile = imageFile.asRequestBody("image/jpeg".toMediaType())
+            val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
+            
+            val response = uploadService.uploadPhoto(API_KEY, authHeader, imagePart)
+            Log.d(TAG, "Response code: ${response.code()}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+                if (body != null) {
+                    return Pair("", body)
+                } else {
+                    return Pair("Server returned empty response", null)
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Failed to upload photo: ${response.message()}", null)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            return Pair("Network error: ${ex.message}", null)
+        }
+    }
+
+    suspend fun apiDeletePhoto(accessToken: String): Pair<String, PhotoUploadResponse?> {
+        if (accessToken.isEmpty()) {
+            Log.e(TAG, "Access token is empty")
+            return Pair("Access token nemôže byť prázdny", null)
+        }
+
+        try {
+            Log.d(TAG, "Deleting photo")
+            val authHeader = "Bearer $accessToken"
+            val response = uploadService.deletePhoto(API_KEY, authHeader)
+            Log.d(TAG, "Response code: ${response.code()}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+                if (body != null) {
+                    return Pair("", body)
+                } else {
+                    return Pair("Server returned empty response", null)
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Failed to delete photo: ${response.message()}", null)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            return Pair("Network error: ${ex.message}", null)
         }
     }
 }

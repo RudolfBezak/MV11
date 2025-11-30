@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import java.io.File
 
 class AuthViewModel(private val dataRepository: DataRepository) : ViewModel() {
     private val _registrationResult = MutableLiveData<Evento<Pair<String, User?>>>()
@@ -27,6 +28,15 @@ class AuthViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
     private val _geofenceDeleteResult = MutableLiveData<Evento<Pair<String, Boolean>>>()
     val geofenceDeleteResult: LiveData<Evento<Pair<String, Boolean>>> get() = _geofenceDeleteResult
+
+    private val _userProfileResult = MutableLiveData<Evento<Pair<String, UserProfileResponse?>>>()
+    val userProfileResult: LiveData<Evento<Pair<String, UserProfileResponse?>>> get() = _userProfileResult
+
+    private val _photoUploadResult = MutableLiveData<Evento<Pair<String, PhotoUploadResponse?>>>()
+    val photoUploadResult: LiveData<Evento<Pair<String, PhotoUploadResponse?>>> get() = _photoUploadResult
+
+    private val _photoDeleteResult = MutableLiveData<Evento<Pair<String, PhotoUploadResponse?>>>()
+    val photoDeleteResult: LiveData<Evento<Pair<String, PhotoUploadResponse?>>> get() = _photoDeleteResult
 
     fun registerUser(username: String, email: String, password: String) {
         viewModelScope.launch {
@@ -74,6 +84,27 @@ class AuthViewModel(private val dataRepository: DataRepository) : ViewModel() {
         viewModelScope.launch {
             val result = dataRepository.apiDeleteGeofence(accessToken)
             _geofenceDeleteResult.postValue(Evento(result))
+        }
+    }
+
+    fun getUserProfile(accessToken: String, userId: String) {
+        viewModelScope.launch {
+            val result = dataRepository.apiGetUserProfile(accessToken, userId)
+            _userProfileResult.postValue(Evento(result))
+        }
+    }
+
+    fun uploadPhoto(accessToken: String, imageFile: File) {
+        viewModelScope.launch {
+            val result = dataRepository.apiUploadPhoto(accessToken, imageFile)
+            _photoUploadResult.postValue(Evento(result))
+        }
+    }
+
+    fun deletePhoto(accessToken: String) {
+        viewModelScope.launch {
+            val result = dataRepository.apiDeletePhoto(accessToken)
+            _photoDeleteResult.postValue(Evento(result))
         }
     }
 }

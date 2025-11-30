@@ -10,6 +10,10 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.Query
+import okhttp3.MultipartBody
+import retrofit2.http.Multipart
+import retrofit2.http.Part
 
 interface ApiService {
     @POST("user/create.php")
@@ -62,6 +66,13 @@ interface ApiService {
         @retrofit2.http.Header("Authorization") accessToken: String
     ): Response<GeofenceUpdateResponse>
 
+    @GET("user/get.php")
+    suspend fun getUserProfile(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @retrofit2.http.Header("Authorization") accessToken: String,
+        @Query("id") userId: String
+    ): Response<UserProfileResponse>
+
     companion object {
         fun create(): ApiService {
             val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -79,6 +90,42 @@ interface ApiService {
                 .build()
 
             return retrofit.create(ApiService::class.java)
+        }
+    }
+}
+
+interface UploadApiService {
+    @Multipart
+    @POST("user/photo.php")
+    suspend fun uploadPhoto(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @retrofit2.http.Header("Authorization") accessToken: String,
+        @Part image: MultipartBody.Part
+    ): Response<PhotoUploadResponse>
+
+    @DELETE("user/photo.php")
+    suspend fun deletePhoto(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @retrofit2.http.Header("Authorization") accessToken: String
+    ): Response<PhotoUploadResponse>
+
+    companion object {
+        fun create(): UploadApiService {
+            val loggingInterceptor = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+
+            val client = OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build()
+
+            val retrofit = Retrofit.Builder()
+                .baseUrl("https://upload.mcomputing.eu/")
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+            return retrofit.create(UploadApiService::class.java)
         }
     }
 }
