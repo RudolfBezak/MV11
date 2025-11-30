@@ -44,8 +44,10 @@ class FeedFragment : Fragment() {
 
         viewModel.feed_items.observe(viewLifecycleOwner) { users ->
             val userList = users.filterNotNull()
-            feedAdapter.updateUsers(userList)
-            Log.d("FeedFragment", "Aktualizované používateľov: ${userList.size}")
+            // Sort: user with lat/lon (current user) first
+            val sortedList = userList.sortedByDescending { it.lat != 0.0 && it.lon != 0.0 }
+            feedAdapter.updateUsers(sortedList)
+            Log.d("FeedFragment", "Aktualizované používateľov: ${sortedList.size}")
         }
 
         viewModel.loading.observe(viewLifecycleOwner) { isLoading ->

@@ -53,18 +53,18 @@ class FeedAdapter : RecyclerView.Adapter<FeedAdapter.FeedViewHolder>() {
         val textView = holder.itemView.findViewById<TextView>(R.id.item_text)
         val imageView = holder.itemView.findViewById<ImageView>(R.id.item_image)
         
-        // Clear previous image to prevent showing wrong image during recycling
-        Glide.with(holder.itemView.context).clear(imageView)
-        imageView.setImageResource(R.drawable.profile_foreground)
+        // Check if this is the current user (has coordinates)
+        val isCurrentUser = user.lat != 0.0 && user.lon != 0.0
+        val nameText = if (isCurrentUser) "${user.name} (ja)" else user.name
         
         // Build text - only show lat/lon if coordinates are available (not 0.0)
         val hasCoordinates = user.lat != 0.0 && user.lon != 0.0
         val text = if (hasCoordinates) {
             val latText = String.format("%.6f", user.lat)
             val lonText = String.format("%.6f", user.lon)
-            "${user.name}\nUID: ${user.uid}\nLat: $latText\nLon: $lonText"
+            "$nameText\nUID: ${user.uid}\nLat: $latText\nLon: $lonText"
         } else {
-            "${user.name}\nUID: ${user.uid}"
+            "$nameText\nUID: ${user.uid}"
         }
         textView.text = text
         
