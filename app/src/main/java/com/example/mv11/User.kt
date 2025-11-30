@@ -141,3 +141,13 @@ data class PhotoUploadResponse(
     val photo: String
 )
 
+data class RefreshTokenRequest(
+    val refresh: String
+)
+
+data class RefreshTokenResponse(
+    val uid: String,
+    val access: String,
+    val refresh: String
+)
+

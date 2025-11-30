@@ -162,11 +162,7 @@ class ProfileFragment : Fragment() {
         setupPhotoButtons()
         observePhotoResults()
         
-        // Load user photo on fragment creation
-        val user = PreferenceData.getInstance().getUser(context)
-        if (user != null && user.access.isNotEmpty()) {
-            viewModel.getUserProfile(user.access, user.uid)
-        }
+        // Load user profile on fragment creation - will be handled in updateUI()
 
         val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
         bottomNav.setActiveItem(BottomNavItem.PROFILE)
@@ -179,7 +175,14 @@ class ProfileFragment : Fragment() {
 
     private fun updateUI() {
         val currentView = view ?: return
+        val currentUser = PreferenceData.getInstance().getUser(context)
+        
+        // Get userId from arguments, if not provided, use current user's ID
+        val userId = arguments?.getString("userId") ?: currentUser?.uid ?: ""
+        val isOwnProfile = userId.isEmpty() || userId == currentUser?.uid
+        
         val user = PreferenceData.getInstance().getUser(context)
+        val textViewTitle = currentView.findViewById<TextView>(R.id.textView)
         val labelName = currentView.findViewById<TextView>(R.id.labelName)
         val tvUserName = currentView.findViewById<TextView>(R.id.tvUserName)
         val labelEmail = currentView.findViewById<TextView>(R.id.labelEmail)
@@ -204,10 +207,13 @@ class ProfileFragment : Fragment() {
         val btnUploadPhoto = currentView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnUploadPhoto)
         val btnDeletePhoto = currentView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnDeletePhoto)
 
-        if (user != null) {
-            tvUserName.text = user.name
-            tvUserEmail.text = user.email
-            tvUserUid.text = user.uid
+        if (isOwnProfile && currentUser != null) {
+            // Own profile - show "Tvoj profil" and all options
+            textViewTitle.text = getString(R.string.your_profile)
+            
+            tvUserName.text = currentUser.name
+            tvUserEmail.text = currentUser.email
+            tvUserUid.text = currentUser.uid
             
             // Show photo and buttons
             ivUserPhoto.visibility = View.VISIBLE
@@ -228,8 +234,8 @@ class ProfileFragment : Fragment() {
             btnRegister.visibility = View.GONE
             
             // Load user photo
-            if (user.access.isNotEmpty()) {
-                viewModel.getUserProfile(user.access, user.uid)
+            if (currentUser.access.isNotEmpty()) {
+                viewModel.getUserProfile(currentUser.access, currentUser.uid)
             }
 
             // Load location sharing preference
@@ -277,6 +283,80 @@ class ProfileFragment : Fragment() {
                 radiusContainer.visibility = View.GONE
                 btnUpdateRange.visibility = View.GONE
             }
+        } else if (currentUser != null && userId.isNotEmpty() && userId != currentUser.uid) {
+            // Other user's profile - show only photo, name, email, uid
+            textViewTitle.text = getString(R.string.user_profile)
+            
+            // Load other user's profile
+            if (currentUser.access.isNotEmpty()) {
+                viewModel.getUserProfile(currentUser.access, userId)
+            }
+            
+            // Show only basic info (photo, name, uid - email not available in API)
+            ivUserPhoto.visibility = View.VISIBLE
+            btnUploadPhoto.visibility = View.GONE
+            btnDeletePhoto.visibility = View.GONE
+            
+            labelName.visibility = View.VISIBLE
+            tvUserName.visibility = View.VISIBLE
+            labelEmail.visibility = View.GONE
+            tvUserEmail.visibility = View.GONE
+            labelUid.visibility = View.VISIBLE
+            tvUserUid.visibility = View.VISIBLE
+            
+            // Hide editing options
+            labelLocationSharing.visibility = View.GONE
+            locationSharingContainer.visibility = View.GONE
+            tvChangePassword.visibility = View.GONE
+            btnLogout.visibility = View.GONE
+            btnLogin.visibility = View.GONE
+            btnRegister.visibility = View.GONE
+            labelLocationCoords.visibility = View.GONE
+            tvLocationCoords.visibility = View.GONE
+            labelRadius.visibility = View.GONE
+            radiusContainer.visibility = View.GONE
+            btnUpdateRange.visibility = View.GONE
+        } else if (currentUser != null) {
+            // Fallback - own profile
+            textViewTitle.text = getString(R.string.your_profile)
+            
+            tvUserName.text = currentUser.name
+            tvUserEmail.text = currentUser.email
+            tvUserUid.text = currentUser.uid
+            
+            // Show photo and buttons
+            ivUserPhoto.visibility = View.VISIBLE
+            btnUploadPhoto.visibility = View.VISIBLE
+            btnDeletePhoto.visibility = View.VISIBLE
+            
+            labelName.visibility = View.VISIBLE
+            tvUserName.visibility = View.VISIBLE
+            labelEmail.visibility = View.VISIBLE
+            tvUserEmail.visibility = View.VISIBLE
+            labelUid.visibility = View.VISIBLE
+            tvUserUid.visibility = View.VISIBLE
+            labelLocationSharing.visibility = View.VISIBLE
+            locationSharingContainer.visibility = View.VISIBLE
+            tvChangePassword.visibility = View.VISIBLE
+            btnLogout.visibility = View.VISIBLE
+            btnLogin.visibility = View.GONE
+            btnRegister.visibility = View.GONE
+            
+            // Load user photo
+            if (currentUser.access.isNotEmpty()) {
+                viewModel.getUserProfile(currentUser.access, currentUser.uid)
+            }
+            
+            // Load location sharing preference
+            val locationSharingEnabled = PreferenceData.getInstance().getLocationSharingEnabled(context)
+            switchLocationSharing.isChecked = locationSharingEnabled
+            
+            // Hide location coordinates and radius slider for other users
+            labelLocationCoords.visibility = View.GONE
+            tvLocationCoords.visibility = View.GONE
+            labelRadius.visibility = View.GONE
+            radiusContainer.visibility = View.GONE
+            btnUpdateRange.visibility = View.GONE
         } else {
             ivUserPhoto.visibility = View.GONE
             btnUploadPhoto.visibility = View.GONE
@@ -565,7 +645,28 @@ class ProfileFragment : Fragment() {
         viewModel.userProfileResult.observe(viewLifecycleOwner) { evento ->
             evento.getContentIfNotHandled()?.let { result ->
                 if (result.second != null) {
-                    loadUserPhoto(result.second!!.photo)
+                    val profile = result.second!!
+                    loadUserPhoto(profile.photo)
+                    
+                    // Update UI with profile data
+                    val currentView = view ?: return@observe
+                    val userId = arguments?.getString("userId") ?: ""
+                    val currentUser = PreferenceData.getInstance().getUser(context)
+                    val isOwnProfile = userId.isEmpty() || userId == currentUser?.uid
+                    
+                    if (!isOwnProfile) {
+                        // Update UI for other user's profile
+                        val tvUserName = currentView.findViewById<TextView>(R.id.tvUserName)
+                        val tvUserEmail = currentView.findViewById<TextView>(R.id.tvUserEmail)
+                        val labelEmail = currentView.findViewById<TextView>(R.id.labelEmail)
+                        val tvUserUid = currentView.findViewById<TextView>(R.id.tvUserUid)
+                        
+                        tvUserName.text = profile.name
+                        // Hide email label and text (email not available in API response)
+                        labelEmail.visibility = View.GONE
+                        tvUserEmail.visibility = View.GONE
+                        tvUserUid.text = profile.id
+                    }
                 }
             }
         }

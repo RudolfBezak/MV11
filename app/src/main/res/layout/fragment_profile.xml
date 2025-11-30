@@ -35,16 +35,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="32dp"/>
         
-        <TextView
-            android:id="@+id/tvSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/profile_subtitle"
-            style="@style/AppSubtitle"
-            app:layout_constraintTop_toBottomOf="@id/textView"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp"/>
 
         <ImageView
             android:id="@+id/ivUserPhoto"
@@ -54,7 +44,7 @@
             android:scaleType="centerCrop"
             android:background="@drawable/profile_foreground"
             android:contentDescription="@string/user_photo"
-            app:layout_constraintTop_toBottomOf="@+id/tvSubtitle"
+            app:layout_constraintTop_toBottomOf="@+id/textView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

@@ -27,8 +27,8 @@ class DataRepository private constructor(
         fun getInstance(context: Context): DataRepository =
             INSTANCE ?: synchronized(lock) {
                 INSTANCE ?: DataRepository(
-                    ApiService.create(),
-                    UploadApiService.create(),
+                    ApiService.create(context),
+                    UploadApiService.create(context),
                     LocalCache(AppRoomDatabase.getInstance(context).appDao()),
                     context
                 ).also { INSTANCE = it }
@@ -573,6 +573,39 @@ class DataRepository private constructor(
         } catch (ex: IOException) {
             Log.e(TAG, "IOException: ${ex.message}", ex)
             return Pair("Network error: ${ex.message}", null)
+        }
+    }
+
+    suspend fun apiRefreshToken(userId: String, refreshToken: String): Pair<String, RefreshTokenResponse?> {
+        if (refreshToken.isEmpty()) {
+            Log.e(TAG, "Refresh token is empty")
+            return Pair("Refresh token nemôže byť prázdny", null)
+        }
+
+        try {
+            Log.d(TAG, "Refreshing access token for userId: $userId")
+            val response = service.refreshToken(API_KEY, userId, RefreshTokenRequest(refreshToken))
+            Log.d(TAG, "Response code: ${response.code()}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+                if (body != null) {
+                    return Pair("", body)
+                } else {
+                    return Pair("Server returned empty response", null)
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Failed to refresh token: ${response.message()}", null)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            return Pair("Network error: ${ex.message}", null)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            return Pair("Error: ${ex.message}", null)
         }
     }
 }

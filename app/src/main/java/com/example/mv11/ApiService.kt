@@ -1,5 +1,6 @@
 package com.example.mv11
 
+import android.content.Context
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
@@ -73,15 +74,28 @@ interface ApiService {
         @Query("id") userId: String
     ): Response<UserProfileResponse>
 
+    @POST("user/refresh.php")
+    suspend fun refreshToken(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @retrofit2.http.Header("x-user") userId: String,
+        @Body refreshRequest: RefreshTokenRequest
+    ): Response<RefreshTokenResponse>
+
     companion object {
-        fun create(): ApiService {
+        fun create(context: Context? = null): ApiService {
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-            val client = OkHttpClient.Builder()
+            val clientBuilder = OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
-                .build()
+            
+            // Add auth interceptor if context is available
+            if (context != null) {
+                clientBuilder.addInterceptor(AuthInterceptor(context))
+            }
+
+            val client = clientBuilder.build()
 
             val retrofit = Retrofit.Builder()
                 .baseUrl("https://zadanie.mpage.sk/")
@@ -110,14 +124,20 @@ interface UploadApiService {
     ): Response<PhotoUploadResponse>
 
     companion object {
-        fun create(): UploadApiService {
+        fun create(context: Context? = null): UploadApiService {
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-            val client = OkHttpClient.Builder()
+            val clientBuilder = OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
-                .build()
+            
+            // Add auth interceptor if context is available
+            if (context != null) {
+                clientBuilder.addInterceptor(AuthInterceptor(context))
+            }
+
+            val client = clientBuilder.build()
 
             val retrofit = Retrofit.Builder()
                 .baseUrl("https://upload.mcomputing.eu/")

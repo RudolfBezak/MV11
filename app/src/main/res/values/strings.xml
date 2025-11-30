@@ -100,4 +100,6 @@
     <string name="photo_deleted">Fotka bola úspešne odstránená</string>
     <string name="photo_upload_failed">Nepodarilo sa nahrať fotku</string>
     <string name="photo_delete_failed">Nepodarilo sa odstrániť fotku</string>
+    <string name="your_profile">Tvoj profil</string>
+    <string name="user_profile">Profil používateľa</string>
 </resources>

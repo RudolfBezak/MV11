@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -83,6 +84,14 @@ class FeedAdapter : RecyclerView.Adapter<FeedAdapter.FeedViewHolder>() {
         } else {
             // Use default image if no photo
             imageView.setImageResource(R.drawable.profile_foreground)
+        }
+        
+        // Set click listener to navigate to user profile
+        holder.itemView.setOnClickListener {
+            val bundle = android.os.Bundle().apply {
+                putString("userId", user.uid)
+            }
+            holder.itemView.findNavController().navigate(R.id.action_feed_to_profile, bundle)
         }
     }
 
