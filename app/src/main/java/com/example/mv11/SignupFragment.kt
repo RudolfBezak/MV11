@@ -54,11 +54,16 @@ class SignupFragment : Fragment(R.layout.fragment_signup) {
             }
 
             bnd.submitButton.setOnClickListener {
-                val username = bnd.editText1.text.toString()
-                val email = bnd.editText2.text.toString()
-                val password = bnd.editText3.text.toString()
+                val username = viewModel.signupUsername.get()?.trim() ?: ""
+                val email = viewModel.signupEmail.get()?.trim() ?: ""
+                val password = viewModel.signupPassword.get()?.trim() ?: ""
                 
-                viewModel.registerUser(username, email, password)
+                if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                    showSnackbar(bnd.root, "Prosím vyplňte všetky polia", Snackbar.LENGTH_SHORT)
+                    return@setOnClickListener
+                }
+                
+                viewModel.registerUser()
             }
 
             bnd.tvLogin.setOnClickListener {

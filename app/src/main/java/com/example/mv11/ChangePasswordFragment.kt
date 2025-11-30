@@ -48,22 +48,22 @@ class ChangePasswordFragment : Fragment(R.layout.fragment_change_password) {
             }
 
             bnd.btnChangePassword.setOnClickListener {
-                val oldPassword = bnd.etOldPassword.text.toString().trim()
-                val newPassword = bnd.etNewPassword.text.toString().trim()
+                val oldPwd = viewModel.oldPassword.get()?.trim() ?: ""
+                val newPwd = viewModel.newPassword.get()?.trim() ?: ""
 
-                if (oldPassword.isEmpty()) {
+                if (oldPwd.isEmpty()) {
                     showSnackbar(bnd.root, getString(R.string.toast_enter_old_password), Snackbar.LENGTH_SHORT)
                     return@setOnClickListener
                 }
 
-                if (newPassword.isEmpty()) {
+                if (newPwd.isEmpty()) {
                     showSnackbar(bnd.root, getString(R.string.toast_enter_new_password), Snackbar.LENGTH_SHORT)
                     return@setOnClickListener
                 }
 
                 val user = PreferenceData.getInstance().getUser(context)
                 if (user != null && user.access.isNotEmpty()) {
-                    viewModel.changePassword(user.access, oldPassword, newPassword)
+                    viewModel.changePassword(user.access)
                 } else {
                     showSnackbar(bnd.root, getString(R.string.no_user_logged_in), Snackbar.LENGTH_SHORT)
                 }

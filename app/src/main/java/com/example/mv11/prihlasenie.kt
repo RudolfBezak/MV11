@@ -69,8 +69,8 @@ class PrihlasenieFragment : Fragment(R.layout.fragment_prihlasenie) {
             }
 
             bnd.btnLogin.setOnClickListener {
-                val email = bnd.etEmail.text.toString().trim()
-                val password = bnd.etPassword.text.toString().trim()
+                val email = viewModel.loginEmail.get()?.trim() ?: ""
+                val password = viewModel.loginPassword.get()?.trim() ?: ""
 
                 if (email.isEmpty()) {
                     Toast.makeText(context, getString(R.string.toast_enter_email), Toast.LENGTH_SHORT).show()
@@ -82,7 +82,7 @@ class PrihlasenieFragment : Fragment(R.layout.fragment_prihlasenie) {
                     return@setOnClickListener
                 }
 
-                viewModel.loginUser(email, password)
+                viewModel.loginUser()
             }
 
             bnd.tvSignup.setOnClickListener {
@@ -90,15 +90,16 @@ class PrihlasenieFragment : Fragment(R.layout.fragment_prihlasenie) {
             }
 
             bnd.tvForgotPassword.setOnClickListener {
-                val email = bnd.etEmail.text.toString().trim()
+                val email = viewModel.loginEmail.get()?.trim() ?: ""
                 
                 if (email.isEmpty()) {
                     showSnackbar(bnd.root, getString(R.string.toast_enter_email_for_reset), Snackbar.LENGTH_SHORT)
                     return@setOnClickListener
                 }
                 
+                viewModel.resetPasswordEmail.set(email)
                 hideKeyboard(bnd.root)
-                viewModel.resetPassword(email)
+                viewModel.resetPassword()
             }
 
             bnd.bottomNavigationWidget.setActiveItem(BottomNavItem.PROFILE)

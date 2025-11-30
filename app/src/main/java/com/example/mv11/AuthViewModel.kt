@@ -1,5 +1,6 @@
 package com.example.mv11
 
+import androidx.databinding.ObservableField
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,18 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 class AuthViewModel(private val dataRepository: DataRepository) : ViewModel() {
+    val loginEmail = ObservableField<String>("")
+    val loginPassword = ObservableField<String>("")
+    
+    val signupUsername = ObservableField<String>("")
+    val signupEmail = ObservableField<String>("")
+    val signupPassword = ObservableField<String>("")
+    
+    val oldPassword = ObservableField<String>("")
+    val newPassword = ObservableField<String>("")
+    
+    val resetPasswordEmail = ObservableField<String>("")
+
     private val _registrationResult = MutableLiveData<Evento<Pair<String, User?>>>()
     val registrationResult: LiveData<Evento<Pair<String, User?>>> get() = _registrationResult
 
@@ -38,14 +51,19 @@ class AuthViewModel(private val dataRepository: DataRepository) : ViewModel() {
     private val _photoDeleteResult = MutableLiveData<Evento<Pair<String, PhotoUploadResponse?>>>()
     val photoDeleteResult: LiveData<Evento<Pair<String, PhotoUploadResponse?>>> get() = _photoDeleteResult
 
-    fun registerUser(username: String, email: String, password: String) {
+    fun registerUser() {
+        val username = signupUsername.get() ?: ""
+        val email = signupEmail.get() ?: ""
+        val password = signupPassword.get() ?: ""
         viewModelScope.launch {
             val result = dataRepository.apiRegisterUser(username, email, password)
             _registrationResult.postValue(Evento(result))
         }
     }
 
-    fun loginUser(email: String, password: String) {
+    fun loginUser() {
+        val email = loginEmail.get() ?: ""
+        val password = loginPassword.get() ?: ""
         viewModelScope.launch {
             val result = dataRepository.apiLoginUser(email, password)
             _loginResult.postValue(Evento(result))
@@ -59,16 +77,19 @@ class AuthViewModel(private val dataRepository: DataRepository) : ViewModel() {
         }
     }
 
-    fun resetPassword(email: String) {
+    fun resetPassword() {
+        val email = resetPasswordEmail.get() ?: ""
         viewModelScope.launch {
             val result = dataRepository.apiResetPassword(email)
             _passwordResetResult.postValue(Evento(result))
         }
     }
 
-    fun changePassword(accessToken: String, oldPassword: String, newPassword: String) {
+    fun changePassword(accessToken: String) {
+        val oldPwd = oldPassword.get() ?: ""
+        val newPwd = newPassword.get() ?: ""
         viewModelScope.launch {
-            val result = dataRepository.apiChangePassword(accessToken, oldPassword, newPassword)
+            val result = dataRepository.apiChangePassword(accessToken, oldPwd, newPwd)
             _passwordChangeResult.postValue(Evento(result))
         }
     }
