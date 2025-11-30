@@ -66,6 +66,7 @@ class ProfileFragment : Fragment() {
 
         setupClickListeners()
         setupLocationSharingToggle()
+        setupChangePasswordClick()
 
         val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)
         bottomNav.setActiveItem(BottomNavItem.PROFILE)
@@ -88,6 +89,7 @@ class ProfileFragment : Fragment() {
         val labelLocationSharing = currentView.findViewById<TextView>(R.id.labelLocationSharing)
         val locationSharingContainer = currentView.findViewById<View>(R.id.locationSharingContainer)
         val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
+        val tvChangePassword = currentView.findViewById<TextView>(R.id.tvChangePassword)
         val btnLogout = currentView.findViewById<Button>(R.id.btnLogout)
         val btnLogin = currentView.findViewById<Button>(R.id.btnLogin)
         val btnRegister = currentView.findViewById<Button>(R.id.btnRegister)
@@ -105,6 +107,7 @@ class ProfileFragment : Fragment() {
             tvUserUid.visibility = View.VISIBLE
             labelLocationSharing.visibility = View.VISIBLE
             locationSharingContainer.visibility = View.VISIBLE
+            tvChangePassword.visibility = View.VISIBLE
             btnLogout.visibility = View.VISIBLE
             btnLogin.visibility = View.GONE
             btnRegister.visibility = View.GONE
@@ -121,6 +124,7 @@ class ProfileFragment : Fragment() {
             tvUserUid.visibility = View.GONE
             labelLocationSharing.visibility = View.GONE
             locationSharingContainer.visibility = View.GONE
+            tvChangePassword.visibility = View.GONE
             btnLogout.visibility = View.GONE
             btnLogin.visibility = View.VISIBLE
             btnRegister.visibility = View.VISIBLE
@@ -140,6 +144,7 @@ class ProfileFragment : Fragment() {
         btnRegister.setOnClickListener {
           findNavController().navigate(R.id.signupFragment)
         }
+
 
         btnLogout.setOnClickListener {
             val currentUser = PreferenceData.getInstance().getUser(context)
@@ -179,6 +184,15 @@ class ProfileFragment : Fragment() {
         switchLocationSharing.setOnCheckedChangeListener { _, isChecked ->
             PreferenceData.getInstance().setLocationSharingEnabled(context, isChecked)
             Log.d("ProfileFragment", "Location sharing ${if (isChecked) "enabled" else "disabled"}")
+        }
+    }
+
+    private fun setupChangePasswordClick() {
+        val currentView = view ?: return
+        val tvChangePassword = currentView.findViewById<TextView>(R.id.tvChangePassword)
+        
+        tvChangePassword.setOnClickListener {
+            findNavController().navigate(R.id.action_profile_to_change_password)
         }
     }
 }

@@ -33,6 +33,19 @@ interface ApiService {
         @retrofit2.http.Header("Authorization") accessToken: String
     ): Response<Void>
 
+    @POST("user/reset.php")
+    suspend fun resetPassword(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @Body resetInfo: PasswordResetRequest
+    ): Response<PasswordResetResponse>
+
+    @POST("user/password.php")
+    suspend fun changePassword(
+        @retrofit2.http.Header("x-apikey") apiKey: String,
+        @retrofit2.http.Header("Authorization") accessToken: String,
+        @Body passwordInfo: PasswordChangeRequest
+    ): Response<PasswordChangeResponse>
+
     companion object {
         fun create(): ApiService {
             val loggingInterceptor = HttpLoggingInterceptor().apply {

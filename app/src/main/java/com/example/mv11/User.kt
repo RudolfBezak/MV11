@@ -61,7 +61,7 @@ data class UserRegistration(
 )
 
 data class UserLogin(
-    val email: String,
+    val name: String,  // Can be username or email
     val password: String
 )
 
@@ -79,5 +79,23 @@ data class UserResponse(
     val lon: Double,
     val radius: Double,
     val photo: String = ""
+)
+
+data class PasswordResetRequest(
+    val email: String
+)
+
+data class PasswordResetResponse(
+    val status: String,
+    val message: String? = null
+)
+
+data class PasswordChangeRequest(
+    val old_password: String,
+    val new_password: String
+)
+
+data class PasswordChangeResponse(
+    val status: String
 )
 

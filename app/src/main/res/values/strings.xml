@@ -14,15 +14,16 @@
     <!-- Login Fragment -->
     <string name="login_title">Vitajte v Appke</string>
     <string name="login_subtitle">Prihláste sa do svojho účtu</string>
-    <string name="hint_email">Email</string>
+    <string name="hint_email">Meno alebo email</string>
     <string name="hint_password">Heslo</string>
     <string name="forgot_password">Zabudli ste heslo?</string>
     <string name="btn_login_submit">Prihlásiť sa</string>
     <string name="no_account">Nemáte účet?</string>
     <string name="signup_link">Zaregistrujte sa</string>
-    <string name="toast_enter_email">Zadajte email</string>
+    <string name="toast_enter_email">Zadajte meno alebo email</string>
     <string name="toast_enter_password">Zadajte heslo</string>
     <string name="toast_login_success">Prihlásenie úspešné!</string>
+    <string name="error_login_wrong_credentials">Meno alebo heslo je nesprávne</string>
     <string name="toast_forgot_not_implemented">Funkcia \'Zabudnuté heslo\' zatiaľ nie je implementovaná</string>
     
     <!-- Signup Fragment -->
@@ -32,6 +33,8 @@
     <string name="hint_name">Vaše meno</string>
     <string name="hint_email_placeholder">vas@email.com</string>
     <string name="btn_register">Zaregistrovať sa</string>
+    <string name="have_account">Už mám účet?</string>
+    <string name="login_link">Prihlásiť sa</string>
     <string name="registration_success">Registrácia úspešná!</string>
     <string name="error_username_exists">Používateľské meno už existuje. Vyberte si iné používateľské meno.</string>
     <string name="error_email_exists">Email už existuje. Vyberte si iný email.</string>
@@ -64,4 +67,17 @@
     <string name="nav_map">Mapa</string>
     <string name="nav_list">Zoznam</string>
     <string name="nav_profile">Profil</string>
+    
+    <!-- Change Password Fragment -->
+    <string name="change_password_title">Zmena hesla</string>
+    <string name="change_password_link">Zmena/obnova hesla</string>
+    <string name="hint_old_password">Staré heslo</string>
+    <string name="hint_new_password">Nové heslo</string>
+    <string name="btn_change_password">Zmeň heslo</string>
+    <string name="forgot_password_small">Zabudol som heslo</string>
+    <string name="toast_enter_old_password">Zadajte staré heslo</string>
+    <string name="toast_enter_new_password">Zadajte nové heslo</string>
+    <string name="password_change_success">Heslo bolo úspešne zmenené</string>
+    <string name="password_reset_email_sent">Email s odkazom na obnovenie hesla bol odoslaný</string>
+    <string name="error_email_not_found">Email sa nenašiel</string>
 </resources>

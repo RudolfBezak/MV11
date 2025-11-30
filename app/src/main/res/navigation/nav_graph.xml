@@ -78,6 +78,16 @@
         <action
             android:id="@+id/action_profile_to_signup"
             app:destination="@id/signupFragment" />
+
+        <action
+            android:id="@+id/action_profile_to_change_password"
+            app:destination="@id/changePasswordFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.example.mv11.ChangePasswordFragment"
+        android:label="Zmena hesla">
     </fragment>
 
     <fragment

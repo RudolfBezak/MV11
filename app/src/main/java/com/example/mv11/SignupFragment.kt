@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -64,6 +65,10 @@ class SignupFragment : Fragment() {
             val password = view.findViewById<TextInputEditText>(R.id.editText3).text.toString()
             
             viewModel.registerUser(username, email, password)
+        }
+
+        view.findViewById<TextView>(R.id.tvLogin).setOnClickListener {
+            findNavController().navigate(R.id.action_signup_to_prihlasenie)
         }
         
         val bottomNav = view.findViewById<BottomNavigationWidget>(R.id.bottomNavigationWidget)

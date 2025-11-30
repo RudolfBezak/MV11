@@ -151,6 +151,20 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <TextView
+            android:id="@+id/tvChangePassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/change_password_link"
+            android:textColor="#2196F3"
+            android:textSize="14sp"
+            android:padding="8dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/locationSharingContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
         <Button
             android:id="@+id/btnLogout"
             android:layout_width="0dp"
@@ -160,7 +174,7 @@
             android:layout_marginTop="32dp"
             android:layout_marginBottom="16dp"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@+id/locationSharingContainer"
+            app:layout_constraintTop_toBottomOf="@+id/tvChangePassword"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

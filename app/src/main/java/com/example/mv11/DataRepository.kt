@@ -93,19 +93,19 @@ class DataRepository private constructor(
         }
     }
 
-    suspend fun apiLoginUser(email: String, password: String): Pair<String, User?> {
-        if (email.isEmpty()) {
-            Log.e(TAG, "Email is empty")
-            return Pair("Email can not be empty", null)
+    suspend fun apiLoginUser(nameOrEmail: String, password: String): Pair<String, User?> {
+        if (nameOrEmail.isEmpty()) {
+            Log.e(TAG, "Name/Email is empty")
+            return Pair("Meno alebo email nemôže byť prázdne", null)
         }
         if (password.isEmpty()) {
             Log.e(TAG, "Password is empty")
-            return Pair("Password can not be empty", null)
+            return Pair("Heslo nemôže byť prázdne", null)
         }
         try {
-            Log.d(TAG, "Sending login request for email: $email")
+            Log.d(TAG, "Sending login request for name/email: $nameOrEmail")
             Log.d(TAG, "Using API key: $API_KEY")
-            val response = service.loginUser(API_KEY, UserLogin(email, password))
+            val response = service.loginUser(API_KEY, UserLogin(nameOrEmail, password))
             Log.d(TAG, "Response code: ${response.code()}")
             Log.d(TAG, "Response message: ${response.message()}")
             Log.d(TAG, "Response isSuccessful: ${response.isSuccessful}")
@@ -115,11 +115,31 @@ class DataRepository private constructor(
                 Log.d(TAG, "Response body: $body")
                 
                 if (body != null) {
+                    Log.d(TAG, "Login response: uid=${body.uid}, access=${body.access}, refresh=${body.refresh}")
+                    
+                    // Check if login failed (uid = -1 means wrong username/email or password)
+                    if (body.uid == "-1") {
+                        Log.e(TAG, "Login failed: wrong username/email or password")
+                        return Pair("Meno alebo heslo je nesprávne", null)
+                    }
+                    
+                    // Check if access token is empty (login failed for other reason)
+                    if (body.access.isEmpty()) {
+                        Log.e(TAG, "Access token is empty after login")
+                        return Pair("Prihlásenie zlyhalo. Skúste to znova.", null)
+                    }
+                    
                     Log.d(TAG, "Login successful: uid=${body.uid}")
                     Log.d(TAG, "Access token from API: ${body.access}, length: ${body.access.length}")
                     Log.d(TAG, "Refresh token from API: ${body.refresh}, length: ${body.refresh.length}")
-                    val username = email.substringBefore("@")
-                    return Pair("", User(username, email, body.uid, body.access, body.refresh))
+                    
+                    // Use nameOrEmail as both name and email (API accepts both)
+                    val username = if (nameOrEmail.contains("@")) {
+                        nameOrEmail.substringBefore("@")
+                    } else {
+                        nameOrEmail
+                    }
+                    return Pair("", User(username, nameOrEmail, body.uid, body.access, body.refresh))
                 } else {
                     Log.e(TAG, "Response body is null")
                     return Pair("Server returned empty response", null)
@@ -216,5 +236,102 @@ class DataRepository private constructor(
     }
 
     fun getUsers() = cache.getUsers()
+
+    suspend fun apiResetPassword(email: String): Pair<String, Boolean> {
+        if (email.isEmpty()) {
+            Log.e(TAG, "Email is empty")
+            return Pair("Email nemôže byť prázdny", false)
+        }
+        try {
+            Log.d(TAG, "Sending password reset request for email: $email")
+            Log.d(TAG, "Using API key: $API_KEY")
+            val response = service.resetPassword(API_KEY, PasswordResetRequest(email))
+            Log.d(TAG, "Response code: ${response.code()}")
+            Log.d(TAG, "Response message: ${response.message()}")
+            Log.d(TAG, "Response isSuccessful: ${response.isSuccessful}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+
+                if (body != null && body.status == "success") {
+                    Log.d(TAG, "Password reset email sent successfully")
+                    return Pair("", true)
+                } else {
+                    val errorMessage = body?.message ?: "Nepodarilo sa odoslať email"
+                    Log.e(TAG, "Password reset failed: $errorMessage")
+                    return Pair(errorMessage, false)
+                }
+            } else {
+                val body = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $body")
+                val errorBody = try {
+                    val gson = com.google.gson.Gson()
+                    val errorResponse = gson.fromJson(body, PasswordResetResponse::class.java)
+                    errorResponse.message ?: "Nepodarilo sa odoslať email"
+                } catch (e: Exception) {
+                    "Nepodarilo sa odoslať email"
+                }
+                return Pair(errorBody, false)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Skontrolujte internetové pripojenie. Nepodarilo sa odoslať email.", false)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Chyba: ${ex.message}", false)
+        }
+    }
+
+    suspend fun apiChangePassword(accessToken: String, oldPassword: String, newPassword: String): Pair<String, Boolean> {
+        if (oldPassword.isEmpty()) {
+            Log.e(TAG, "Old password is empty")
+            return Pair("Staré heslo nemôže byť prázdne", false)
+        }
+        if (newPassword.isEmpty()) {
+            Log.e(TAG, "New password is empty")
+            return Pair("Nové heslo nemôže byť prázdne", false)
+        }
+        if (accessToken.isEmpty()) {
+            Log.e(TAG, "Access token is empty")
+            return Pair("Access token nemôže byť prázdny", false)
+        }
+        try {
+            Log.d(TAG, "Sending password change request")
+            Log.d(TAG, "Using API key: $API_KEY")
+            val authHeader = "Bearer $accessToken"
+            val response = service.changePassword(API_KEY, authHeader, PasswordChangeRequest(oldPassword, newPassword))
+            Log.d(TAG, "Response code: ${response.code()}")
+            Log.d(TAG, "Response message: ${response.message()}")
+            Log.d(TAG, "Response isSuccessful: ${response.isSuccessful}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d(TAG, "Response body: $body")
+
+                if (body != null && body.status == "success") {
+                    Log.d(TAG, "Password changed successfully")
+                    return Pair("", true)
+                } else {
+                    Log.e(TAG, "Password change failed: status=${body?.status}")
+                    return Pair("Nepodarilo sa zmeniť heslo", false)
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Request failed with code: ${response.code()}, error: $errorBody")
+                return Pair("Nepodarilo sa zmeniť heslo: ${response.message()}", false)
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "IOException: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Skontrolujte internetové pripojenie. Nepodarilo sa zmeniť heslo.", false)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception: ${ex.message}", ex)
+            ex.printStackTrace()
+            return Pair("Chyba: ${ex.message}", false)
+        }
+    }
 }
 
