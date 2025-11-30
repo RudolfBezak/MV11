@@ -1,79 +1,63 @@
 package com.example.mv11
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.example.mv11.databinding.FragmentIntroBinding
 
-class IntroFragment : Fragment() {
-    
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_intro, container, false)
+class IntroFragment : Fragment(R.layout.fragment_intro) {
+
+    private var binding: FragmentIntroBinding? = null
+    private lateinit var viewModel: IntroViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(requireActivity(), object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return IntroViewModel(requireActivity().application) as T
+            }
+        })[IntroViewModel::class.java]
     }
-    
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        updateUI(view)
-        
-        // Don't set active item on intro screen - let user navigate first
+        binding = FragmentIntroBinding.bind(view).apply {
+            lifecycleOwner = viewLifecycleOwner
+            this.viewModel = this@IntroFragment.viewModel
+        }.also { bnd ->
+            bnd.button1.setOnClickListener {
+                findNavController().navigate(R.id.action_intro_to_prihlasenie)
+            }
+
+            bnd.button2.setOnClickListener {
+                findNavController().navigate(R.id.action_intro_to_signup)
+            }
+
+            bnd.buttonMap.setOnClickListener {
+                findNavController().navigate(R.id.mapFragment)
+            }
+
+            bnd.buttonUsers.setOnClickListener {
+                findNavController().navigate(R.id.feedFragment)
+            }
+
+            bnd.buttonProfile.setOnClickListener {
+                findNavController().navigate(R.id.profileFragment)
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        view?.let { updateUI(it) }
+        viewModel.refreshUserStatus()
     }
 
-    private fun updateUI(view: View) {
-        val user = PreferenceData.getInstance().getUser(context)
-        val button1 = view.findViewById<Button>(R.id.button1) // Login
-        val button2 = view.findViewById<Button>(R.id.button2) // Signup
-        val buttonMap = view.findViewById<Button>(R.id.buttonMap) // Map
-        val buttonUsers = view.findViewById<Button>(R.id.buttonUsers) // Users
-        val buttonProfile = view.findViewById<Button>(R.id.buttonProfile) // Profile
-
-        if (user != null) {
-            // User is logged in - show Map, Users, Profile buttons
-            button1.visibility = View.GONE
-            button2.visibility = View.GONE
-            buttonMap.visibility = View.VISIBLE
-            buttonUsers.visibility = View.VISIBLE
-            buttonProfile.visibility = View.VISIBLE
-
-            buttonMap.setOnClickListener {
-                findNavController().navigate(R.id.mapFragment)
-            }
-
-            buttonUsers.setOnClickListener {
-                findNavController().navigate(R.id.feedFragment)
-            }
-
-            buttonProfile.setOnClickListener {
-                findNavController().navigate(R.id.profileFragment)
-            }
-        } else {
-            // User is not logged in - show Login, Signup buttons
-            button1.visibility = View.VISIBLE
-            button2.visibility = View.VISIBLE
-            buttonMap.visibility = View.GONE
-            buttonUsers.visibility = View.GONE
-            buttonProfile.visibility = View.GONE
-
-            button1.setOnClickListener {
-                findNavController().navigate(R.id.action_intro_to_prihlasenie)
-            }
-
-            button2.setOnClickListener {
-                findNavController().navigate(R.id.action_intro_to_signup)
-            }
-        }
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
     }
 }
 
