@@ -182,11 +182,16 @@ class DataRepository private constructor(
                 Log.d(TAG, "Response body: $body")
 
                 if (body != null) {
-                    // Save "me" object coordinates if available
-                    body.me?.let { me ->
-                        val lat = me.lat.toDoubleOrNull() ?: 0.0
-                        val lon = me.lon.toDoubleOrNull() ?: 0.0
-                        val radius = me.radius.toDoubleOrNull() ?: 100.0
+                    // Check if geofence is enabled based on response structure
+                    if (body.me != null) {
+                        // "me" object exists - geofence is enabled
+                        PreferenceData.getInstance().setLocationSharingEnabled(context, true)
+                        Log.d(TAG, "Geofence is enabled (me object present)")
+                        
+                        // Save "me" object coordinates if available
+                        val lat = body.me.lat.toDoubleOrNull() ?: 0.0
+                        val lon = body.me.lon.toDoubleOrNull() ?: 0.0
+                        val radius = body.me.radius.toDoubleOrNull() ?: 100.0
                         if (lat != 0.0 && lon != 0.0) {
                             PreferenceData.getInstance().setCurrentLocation(
                                 context,
@@ -196,6 +201,10 @@ class DataRepository private constructor(
                             )
                             Log.d(TAG, "Saved current location: lat=$lat, lon=$lon, radius=$radius")
                         }
+                    } else {
+                        // No "me" object - geofence is disabled
+                        PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+                        Log.d(TAG, "Geofence is disabled (no me object)")
                     }
 
                     if (body.list.isEmpty()) {

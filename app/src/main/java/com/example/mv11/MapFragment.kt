@@ -71,11 +71,19 @@ class MapFragment : Fragment() {
         viewModel.message.observe(viewLifecycleOwner) { evento ->
             evento.getContentIfNotHandled()?.let { message ->
                 if (message.isNotEmpty()) {
-                    Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show()
-                } else {
-                    Snackbar.make(view, "Používatelia načítaní!", Snackbar.LENGTH_SHORT).show()
+                    if (message == "MUSIS_SI_ZAPNUT_GEOFENCE") {
+                        Snackbar.make(view, "Musíš si zapnúť geofence na videnie používateľov", Snackbar.LENGTH_LONG).show()
+                    } else {
+                        Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show()
+                    }
                 }
             }
+        }
+        
+        // Load users on fragment creation
+        val user = PreferenceData.getInstance().getUser(requireContext())
+        if (user != null && user.access.isNotEmpty()) {
+            viewModel.updateItems(user.access)
         }
     }
     
