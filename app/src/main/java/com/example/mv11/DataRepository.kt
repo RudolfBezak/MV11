@@ -299,6 +299,10 @@ class DataRepository private constructor(
 
     fun getUsers() = cache.getUsers()
 
+    suspend fun clearDatabase() {
+        cache.deleteUserItems()
+    }
+
     suspend fun apiResetPassword(email: String): Pair<String, Boolean> {
         if (email.isEmpty()) {
             Log.e(TAG, "Email is empty")

@@ -5,8 +5,10 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.mv11.databinding.FragmentIntroBinding
+import kotlinx.coroutines.launch
 
 class IntroFragment : Fragment(R.layout.fragment_intro) {
 
@@ -24,6 +26,15 @@ class IntroFragment : Fragment(R.layout.fragment_intro) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Ak je používateľ odhlásený, vymazať databázu
+        val user = PreferenceData.getInstance().getUser(requireContext())
+        if (user == null) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                DataRepository.getInstance(requireContext()).clearDatabase()
+            }
+        }
+        
         binding = FragmentIntroBinding.bind(view).apply {
             lifecycleOwner = viewLifecycleOwner
             this.viewModel = this@IntroFragment.viewModel

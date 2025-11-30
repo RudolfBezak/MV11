@@ -1,0 +1,60 @@
+package com.example.mv11
+
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.util.Log
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+
+object NotificationHelper {
+    private const val CHANNEL_ID = "kanal-1"
+    private const val CHANNEL_NAME = "MOBV Zadanie"
+    private const val CHANNEL_DESCRIPTION = "Popis notifikacie"
+    private const val NOTIFICATION_ID = 1
+
+    fun createNotificationChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
+                description = CHANNEL_DESCRIPTION
+            }
+
+            val notificationManager: NotificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    fun showNotification(
+        context: Context,
+        title: String,
+        text: String,
+        notificationId: Int = NOTIFICATION_ID
+    ) {
+        createNotificationChannel(context)
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID).apply {
+            setContentTitle(title)
+            setContentText(text)
+            setSmallIcon(android.R.drawable.ic_dialog_info)
+            priority = NotificationCompat.PRIORITY_DEFAULT
+        }
+
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("NotificationHelper", "Chyba povolenie na notifikaciu")
+            return
+        }
+
+        NotificationManagerCompat.from(context).notify(notificationId, builder.build())
+    }
+}
+

@@ -29,8 +29,10 @@ import com.google.android.material.slider.Slider
 import com.google.android.material.switchmaterial.SwitchMaterial
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.mv11.databinding.FragmentProfileBinding
+import kotlinx.coroutines.launch
 
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
@@ -76,6 +78,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     if (result.second) {
                         Log.d("ProfileFragment", "Logout successful")
                         PreferenceData.getInstance().clearData(context)
+                        // Vymazať databázu pri odhlásení
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            DataRepository.getInstance(requireContext()).clearDatabase()
+                        }
                         updateUI()
                         Snackbar.make(
                             bnd.btnLogout,
@@ -133,6 +139,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         Log.d("ProfileFragment", "Geofence deleted successfully")
                         PreferenceData.getInstance().clearCurrentLocation(context)
                         removeGeofence()
+                        WorkManagerHelper.stopPeriodicLocationSync(requireContext())
                         updateUI()
                         Snackbar.make(
                             bnd.switchLocationSharing,
@@ -315,6 +322,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             bnd.radiusContainer.visibility = View.GONE
             bnd.btnUpdateRange.visibility = View.GONE
         } else {
+            // Používateľ nie je prihlásený
+            bnd.textView.text = getString(R.string.profile_not_logged_in_title)
             bnd.ivUserPhoto.visibility = View.GONE
             bnd.btnUploadPhoto.visibility = View.GONE
             bnd.btnDeletePhoto.visibility = View.GONE
@@ -361,6 +370,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     } else {
                         Log.w("ProfileFragment", "Access token is empty - clearing local data only (no API call)")
                         PreferenceData.getInstance().clearData(context)
+                        // Vymazať databázu pri odhlásení
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            DataRepository.getInstance(requireContext()).clearDatabase()
+                        }
                         updateUI()
                         Snackbar.make(
                             bnd.btnLogout,
@@ -398,6 +411,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 if (isChecked) {
                     if (checkLocationPermission()) {
                         getCurrentLocationAndUpdateGeofence(user.access)
+                        WorkManagerHelper.startPeriodicLocationSync(requireContext(), user.access)
                     } else {
                         requestLocationPermission()
                         bnd.switchLocationSharing.isChecked = false
@@ -406,6 +420,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     PreferenceData.getInstance().setLocationSharingEnabled(context, false)
                     viewModel.deleteGeofence(user.access)
                     removeGeofence()
+                    WorkManagerHelper.stopPeriodicLocationSync(requireContext())
                 }
             }
         }
@@ -471,6 +486,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     PreferenceData.getInstance().setCurrentLocation(context, location.latitude, location.longitude, DEFAULT_RADIUS)
                     viewModel.updateGeofence(accessToken, location.latitude, location.longitude, DEFAULT_RADIUS)
                     setupGeofence(location)
+                    WorkManagerHelper.startPeriodicLocationSync(requireContext(), accessToken)
                     updateUI()
                 } else {
                     Log.e("ProfileFragment", "Location is null")
