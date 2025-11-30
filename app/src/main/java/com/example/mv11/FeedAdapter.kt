@@ -43,9 +43,19 @@ class FeedAdapter : RecyclerView.Adapter<FeedAdapter.FeedViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: FeedViewHolder, position: Int) {
-        val user = users[position]
+        // Use adapterPosition to ensure we're using the correct position
+        val adapterPosition = holder.adapterPosition
+        if (adapterPosition == RecyclerView.NO_POSITION || adapterPosition >= users.size) {
+            return
+        }
+        
+        val user = users[adapterPosition]
         val textView = holder.itemView.findViewById<TextView>(R.id.item_text)
         val imageView = holder.itemView.findViewById<ImageView>(R.id.item_image)
+        
+        // Clear previous image to prevent showing wrong image during recycling
+        Glide.with(holder.itemView.context).clear(imageView)
+        imageView.setImageResource(R.drawable.profile_foreground)
         
         // Build text - only show lat/lon if coordinates are available (not 0.0)
         val hasCoordinates = user.lat != 0.0 && user.lon != 0.0

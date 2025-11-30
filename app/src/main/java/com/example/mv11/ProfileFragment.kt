@@ -14,8 +14,11 @@ import android.content.res.ColorStateList
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.slider.Slider
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -386,37 +389,59 @@ class ProfileFragment : Fragment() {
             return
         }
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            if (location != null) {
-                Log.d("ProfileFragment", "Location: lat=${location.latitude}, lon=${location.longitude}")
-                PreferenceData.getInstance().setLocationSharingEnabled(context, true)
-                PreferenceData.getInstance().setCurrentLocation(context, location.latitude, location.longitude, DEFAULT_RADIUS)
-                viewModel.updateGeofence(accessToken, location.latitude, location.longitude, DEFAULT_RADIUS)
-                updateUI() // Refresh UI to show coordinates
-            } else {
-                Log.e("ProfileFragment", "Location is null")
-                val currentView = view ?: return@addOnSuccessListener
+        // Request current location with high priority
+        val locationRequest = CurrentLocationRequest.Builder()
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+            .setDurationMillis(10000)
+            .setMaxUpdateAgeMillis(5000)
+            .build()
+
+        val cancellationTokenSource = CancellationTokenSource()
+
+        fusedLocationClient.getCurrentLocation(locationRequest, cancellationTokenSource.token)
+            .addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    Log.d("ProfileFragment", "Current location: lat=${location.latitude}, lon=${location.longitude}")
+                    PreferenceData.getInstance().setLocationSharingEnabled(context, true)
+                    PreferenceData.getInstance().setCurrentLocation(context, location.latitude, location.longitude, DEFAULT_RADIUS)
+                    viewModel.updateGeofence(accessToken, location.latitude, location.longitude, DEFAULT_RADIUS)
+                    updateUI() // Refresh UI to show coordinates
+                } else {
+                    Log.e("ProfileFragment", "Location is null - trying lastLocation as fallback")
+                    // Fallback to lastLocation if getCurrentLocation returns null
+                    fusedLocationClient.lastLocation.addOnSuccessListener { lastLocation: Location? ->
+                        if (lastLocation != null) {
+                            Log.d("ProfileFragment", "Last known location: lat=${lastLocation.latitude}, lon=${lastLocation.longitude}")
+                            PreferenceData.getInstance().setLocationSharingEnabled(context, true)
+                            PreferenceData.getInstance().setCurrentLocation(context, lastLocation.latitude, lastLocation.longitude, DEFAULT_RADIUS)
+                            viewModel.updateGeofence(accessToken, lastLocation.latitude, lastLocation.longitude, DEFAULT_RADIUS)
+                            updateUI()
+                        } else {
+                            Log.e("ProfileFragment", "Last location is also null")
+                            val currentView = view ?: return@addOnSuccessListener
+                            val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
+                            switchLocationSharing.isChecked = false
+                            PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+                            Snackbar.make(
+                                switchLocationSharing,
+                                getString(R.string.location_not_available),
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+            }.addOnFailureListener { exception ->
+                Log.e("ProfileFragment", "Failed to get current location: ${exception.message}", exception)
+                val currentView = view ?: return@addOnFailureListener
                 val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
                 switchLocationSharing.isChecked = false
                 PreferenceData.getInstance().setLocationSharingEnabled(context, false)
                 Snackbar.make(
                     switchLocationSharing,
-                    getString(R.string.location_not_available),
+                    getString(R.string.location_error),
                     Snackbar.LENGTH_LONG
                 ).show()
             }
-        }.addOnFailureListener { exception ->
-            Log.e("ProfileFragment", "Failed to get location: ${exception.message}", exception)
-            val currentView = view ?: return@addOnFailureListener
-            val switchLocationSharing = currentView.findViewById<SwitchMaterial>(R.id.switchLocationSharing)
-            switchLocationSharing.isChecked = false
-            PreferenceData.getInstance().setLocationSharingEnabled(context, false)
-            Snackbar.make(
-                switchLocationSharing,
-                getString(R.string.location_error),
-                Snackbar.LENGTH_LONG
-            ).show()
-        }
     }
 
     private fun setupChangePasswordClick() {
