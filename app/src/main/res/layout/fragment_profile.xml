@@ -205,6 +205,8 @@
                 android:valueTo="1000.0"
                 android:stepSize="50.0"
                 android:value="100.0"
+                app:trackTint="@color/slider_track_tint"
+                app:thumbTint="@color/slider_thumb_tint"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/tvRadiusValue"
                 app:layout_constraintTop_toTopOf="parent"
