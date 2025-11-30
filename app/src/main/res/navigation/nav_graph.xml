@@ -67,6 +67,9 @@
         android:id="@+id/mapFragment"
         android:name="com.example.mv11.MapFragment"
         android:label="Mapa">
+        <action
+            android:id="@+id/action_map_to_profile"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment

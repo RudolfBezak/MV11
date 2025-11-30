@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
@@ -30,6 +31,7 @@ import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotation
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.bumptech.glide.Glide
@@ -41,6 +43,7 @@ class MapFragment : Fragment() {
     private var mapView: MapView? = null
     private lateinit var viewModel: UserFeedViewModel
     private var pointAnnotationManager: com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager? = null
+    private val markerUserIdMap = mutableMapOf<Long, String>() // Map annotation ID to userId
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -91,9 +94,23 @@ class MapFragment : Fragment() {
     }
     
     private fun setupUserMarkers() {
-        mapView?.let { map ->
-            val annotationApi = map.annotations
+        val mapViewInstance = mapView
+        if (mapViewInstance != null) {
+            val annotationApi = mapViewInstance.annotations
             pointAnnotationManager = annotationApi.createPointAnnotationManager()
+            
+            // Add click listener for markers
+            pointAnnotationManager?.addClickListener { annotation: PointAnnotation ->
+                val annotationId: Long = annotation.id
+                val userId: String? = markerUserIdMap[annotationId]
+                if (userId != null && userId.isNotEmpty()) {
+                    val bundle = Bundle().apply {
+                        putString("userId", userId)
+                    }
+                    findNavController().navigate(R.id.profileFragment, bundle)
+                }
+                true
+            }
         }
         
         // Observe current user location from SharedPreferences
@@ -115,8 +132,9 @@ class MapFragment : Fragment() {
     
     private fun addCurrentUserMarker(lat: Double, lon: Double, radius: Double, users: List<UserEntity>) {
         mapView?.let { map ->
-            // Clear existing markers
+            // Clear existing markers and map
             pointAnnotationManager?.deleteAll()
+            markerUserIdMap.clear()
             
             // Get current user name
             val currentUser = PreferenceData.getInstance().getUser(requireContext())
@@ -129,11 +147,15 @@ class MapFragment : Fragment() {
             
             // Add marker for current user (red border, thicker)
             val currentUserPhoto = currentUser?.let { getUserPhotoFromList(it.uid, users) } ?: ""
+            val currentUserId = currentUser?.uid ?: ""
             createMarkerWithPhoto(userName, currentUserPhoto, isCurrentUser = true) { bitmap ->
                 val pointAnnotationOptions = PointAnnotationOptions()
                     .withPoint(Point.fromLngLat(lon, lat))
                     .withIconImage(bitmap)
-                pointAnnotationManager?.create(pointAnnotationOptions)
+                val annotation = pointAnnotationManager?.create(pointAnnotationOptions)
+                if (annotation != null && currentUserId.isNotEmpty()) {
+                    markerUserIdMap[annotation.id] = currentUserId
+                }
             }
             
             // Add markers for other users (without lat/lon) - random positions in circle
@@ -144,7 +166,10 @@ class MapFragment : Fragment() {
                     val userMarkerOptions = PointAnnotationOptions()
                         .withPoint(Point.fromLngLat(randomPosition.second, randomPosition.first))
                         .withIconImage(bitmap)
-                    pointAnnotationManager?.create(userMarkerOptions)
+                    val annotation = pointAnnotationManager?.create(userMarkerOptions)
+                    if (annotation != null) {
+                        markerUserIdMap[annotation.id] = user.uid
+                    }
                     Log.d("MapFragment", "Pridávam marker pre používateľa: ${user.name} na náhodnej pozícii [${randomPosition.first}, ${randomPosition.second}]")
                 }
             }
