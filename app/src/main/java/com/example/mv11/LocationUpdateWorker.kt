@@ -11,6 +11,9 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class LocationUpdateWorker(
     appContext: Context,
@@ -48,6 +51,16 @@ class LocationUpdateWorker(
             if (!isLocationSharingEnabled) {
                 Log.d(TAG, "Location sharing is disabled, skipping update")
                 return Result.success()
+            }
+
+            val timeFrom = PreferenceData.getInstance().getLocationSharingTimeFrom(applicationContext)
+            val timeTo = PreferenceData.getInstance().getLocationSharingTimeTo(applicationContext)
+            
+            if (timeFrom.isNotEmpty() && timeTo.isNotEmpty()) {
+                if (!isCurrentTimeInInterval(timeFrom, timeTo)) {
+                    Log.d(TAG, "Current time is outside the specified interval ($timeFrom - $timeTo), skipping update")
+                    return Result.success()
+                }
             }
 
             if (ActivityCompat.checkSelfPermission(
@@ -129,6 +142,51 @@ class LocationUpdateWorker(
         } catch (e: Exception) {
             Log.e(TAG, "Error during location update", e)
             Result.retry()
+        }
+    }
+
+    private fun isCurrentTimeInInterval(timeFrom: String, timeTo: String): Boolean {
+        try {
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val fromTime = timeFormat.parse(timeFrom)
+            val toTime = timeFormat.parse(timeTo)
+            
+            if (fromTime == null || toTime == null) {
+                Log.e(TAG, "Failed to parse time interval: $timeFrom - $timeTo")
+                return true
+            }
+            
+            val calendar = Calendar.getInstance()
+            val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+            val currentMinute = calendar.get(Calendar.MINUTE)
+            val currentTimeInMinutes = currentHour * 60 + currentMinute
+            
+            val fromCalendar = Calendar.getInstance().apply {
+                time = fromTime
+            }
+            val fromHour = fromCalendar.get(Calendar.HOUR_OF_DAY)
+            val fromMinute = fromCalendar.get(Calendar.MINUTE)
+            val fromTimeInMinutes = fromHour * 60 + fromMinute
+            
+            val toCalendar = Calendar.getInstance().apply {
+                time = toTime
+            }
+            val toHour = toCalendar.get(Calendar.HOUR_OF_DAY)
+            val toMinute = toCalendar.get(Calendar.MINUTE)
+            val toTimeInMinutes = toHour * 60 + toMinute
+            
+            // Ak je čas "od" väčší ako čas "do", znamená to interval cez polnoc
+            // Napr. od 17:00 do 8:00 = od 17:00 do 24:00 + od 0:00 do 8:00
+            if (fromTimeInMinutes > toTimeInMinutes) {
+                // Interval cez polnoc: aktívny ak je čas >= fromTime alebo <= toTime
+                return currentTimeInMinutes >= fromTimeInMinutes || currentTimeInMinutes <= toTimeInMinutes
+            } else {
+                // Normálny interval v rámci jedného dňa: aktívny ak je čas medzi fromTime a toTime
+                return currentTimeInMinutes >= fromTimeInMinutes && currentTimeInMinutes <= toTimeInMinutes
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking time interval", e)
+            return true
         }
     }
 

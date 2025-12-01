@@ -193,6 +193,95 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
+            android:id="@+id/labelTimeInterval"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_time_interval"
+            style="@style/AppSubtitle"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/locationSharingContainer" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/timeIntervalContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:background="@drawable/profile_info_background"
+            android:padding="16dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/labelTimeInterval"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/labelTimeFrom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_time_from"
+                android:textColor="@color/secondary_yellow"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <EditText
+                android:id="@+id/etTimeFrom"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:hint="HH:mm"
+                android:inputType="time"
+                android:focusable="false"
+                android:clickable="true"
+                android:minHeight="48dp"
+                android:background="@drawable/profile_info_background"
+                android:textColor="@color/secondary_yellow"
+                android:textSize="16sp"
+                android:padding="12dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="16dp"
+                android:gravity="center"
+                app:layout_constraintStart_toEndOf="@+id/labelTimeFrom"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <TextView
+                android:id="@+id/labelTimeTo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_time_to"
+                android:textColor="@color/secondary_yellow"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginStart="16dp"
+                app:layout_constraintStart_toEndOf="@+id/etTimeFrom"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <EditText
+                android:id="@+id/etTimeTo"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:hint="HH:mm"
+                android:inputType="time"
+                android:focusable="false"
+                android:clickable="true"
+                android:minHeight="48dp"
+                android:background="@drawable/profile_info_background"
+                android:textColor="@color/secondary_yellow"
+                android:textSize="16sp"
+                android:padding="12dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                app:layout_constraintStart_toEndOf="@+id/labelTimeTo"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
             android:id="@+id/labelAutoLocationUpdate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -201,7 +290,7 @@
             android:layout_marginTop="16dp"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/locationSharingContainer" />
+            app:layout_constraintTop_toBottomOf="@+id/timeIntervalContainer" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/autoLocationUpdateContainer"

@@ -1,6 +1,7 @@
 package com.example.mv11
 
 import android.Manifest
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -33,6 +34,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.mv11.databinding.FragmentProfileBinding
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
@@ -197,6 +201,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         setupShowMapClick()
         setupRadiusSlider()
         setupUpdateRangeButton()
+        setupTimeIntervalInputs()
         setupPhotoButtons()
         observePhotoResults()
         
@@ -260,6 +265,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 bnd.labelAutoLocationUpdate.visibility = View.VISIBLE
                 bnd.autoLocationUpdateContainer.visibility = View.VISIBLE
                 
+                bnd.labelTimeInterval.visibility = View.VISIBLE
+                bnd.timeIntervalContainer.visibility = View.VISIBLE
+                
+                val timeFrom = PreferenceData.getInstance().getLocationSharingTimeFrom(context)
+                val timeTo = PreferenceData.getInstance().getLocationSharingTimeTo(context)
+                bnd.etTimeFrom.setText(timeFrom)
+                bnd.etTimeTo.setText(timeTo)
+                
                 val autoLocationUpdateEnabled = PreferenceData.getInstance().getAutoLocationUpdateEnabled(context)
                 bnd.switchAutoLocationUpdate.isChecked = autoLocationUpdateEnabled
                 val currentLocation = PreferenceData.getInstance().getCurrentLocation(context)
@@ -301,6 +314,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 bnd.btnUpdateRange.visibility = View.GONE
                 bnd.labelAutoLocationUpdate.visibility = View.GONE
                 bnd.autoLocationUpdateContainer.visibility = View.GONE
+                bnd.labelTimeInterval.visibility = View.GONE
+                bnd.timeIntervalContainer.visibility = View.GONE
             }
         } else if (currentUser != null && userId.isNotEmpty() && userId != currentUser.uid) {
             bnd.textView.text = getString(R.string.user_profile)
@@ -716,6 +731,72 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 putString("targetUserId", userId)
             }
             findNavController().navigate(R.id.action_profile_to_map, bundle)
+        }
+    }
+
+    private fun setupTimeIntervalInputs() {
+        binding?.let { bnd ->
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            
+            bnd.etTimeFrom.setOnClickListener {
+                val timeFrom = PreferenceData.getInstance().getLocationSharingTimeFrom(context)
+                val calendar = Calendar.getInstance()
+                
+                if (timeFrom.isNotEmpty()) {
+                    try {
+                        val date = timeFormat.parse(timeFrom)
+                        if (date != null) {
+                            calendar.time = date
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ProfileFragment", "Error parsing time from: $timeFrom", e)
+                    }
+                }
+                
+                TimePickerDialog(
+                    requireContext(),
+                    { _, hourOfDay, minute ->
+                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                        calendar.set(Calendar.MINUTE, minute)
+                        val timeString = timeFormat.format(calendar.time)
+                        bnd.etTimeFrom.setText(timeString)
+                        PreferenceData.getInstance().setLocationSharingTimeFrom(context, timeString)
+                    },
+                    calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE),
+                    true
+                ).show()
+            }
+            
+            bnd.etTimeTo.setOnClickListener {
+                val timeTo = PreferenceData.getInstance().getLocationSharingTimeTo(context)
+                val calendar = Calendar.getInstance()
+                
+                if (timeTo.isNotEmpty()) {
+                    try {
+                        val date = timeFormat.parse(timeTo)
+                        if (date != null) {
+                            calendar.time = date
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ProfileFragment", "Error parsing time to: $timeTo", e)
+                    }
+                }
+                
+                TimePickerDialog(
+                    requireContext(),
+                    { _, hourOfDay, minute ->
+                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                        calendar.set(Calendar.MINUTE, minute)
+                        val timeString = timeFormat.format(calendar.time)
+                        bnd.etTimeTo.setText(timeString)
+                        PreferenceData.getInstance().setLocationSharingTimeTo(context, timeString)
+                    },
+                    calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE),
+                    true
+                ).show()
+            }
         }
     }
 

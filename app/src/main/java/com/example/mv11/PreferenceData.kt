@@ -215,6 +215,26 @@ class PreferenceData private constructor() {
         return sharedPref.getBoolean(autoLocationUpdateKey, false)
     }
 
+    fun setLocationSharingTimeFrom(context: Context?, timeFrom: String) {
+        val sharedPref = getSharedPreferences(context) ?: return
+        sharedPref.edit().putString("location_sharing_time_from", timeFrom).apply()
+    }
+
+    fun getLocationSharingTimeFrom(context: Context?): String {
+        val sharedPref = getSharedPreferences(context) ?: return ""
+        return sharedPref.getString("location_sharing_time_from", "") ?: ""
+    }
+
+    fun setLocationSharingTimeTo(context: Context?, timeTo: String) {
+        val sharedPref = getSharedPreferences(context) ?: return
+        sharedPref.edit().putString("location_sharing_time_to", timeTo).apply()
+    }
+
+    fun getLocationSharingTimeTo(context: Context?): String {
+        val sharedPref = getSharedPreferences(context) ?: return ""
+        return sharedPref.getString("location_sharing_time_to", "") ?: ""
+    }
+
     fun setLastUserCount(context: Context?, count: Int) {
         val sharedPref = getSharedPreferences(context) ?: return
         val editor = sharedPref.edit()

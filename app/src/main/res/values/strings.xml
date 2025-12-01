@@ -105,4 +105,7 @@
     <string name="your_profile">Tvoj profil</string>
     <string name="user_profile">Profil používateľa</string>
     <string name="btn_show_map">Ukáž mapu</string>
+    <string name="label_time_interval">Zdieľaj moju polohu v časoch:</string>
+    <string name="label_time_from">od:</string>
+    <string name="label_time_to">do:</string>
 </resources>
