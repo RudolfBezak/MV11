@@ -68,6 +68,7 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     
     implementation(libs.work.runtime.ktx)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

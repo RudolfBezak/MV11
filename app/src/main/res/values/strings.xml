@@ -47,6 +47,8 @@
     <string name="label_email_profile">Email:</string>
     <string name="label_uid">UID:</string>
     <string name="label_location_sharing">Zdieľanie polohy</string>
+    <string name="label_auto_location_update">Automatická aktualizácia polohy</string>
+    <string name="label_auto_location_update_toggle">Aktualizovať geofence každých 30 minút</string>
     <string name="btn_logout">Odhlásiť sa</string>
     <string name="btn_login_profile">Prihlásiť sa</string>
     <string name="btn_register_profile">Zaregistrovať sa</string>

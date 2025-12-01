@@ -193,6 +193,55 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
+            android:id="@+id/labelAutoLocationUpdate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_auto_location_update"
+            style="@style/AppSubtitle"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/locationSharingContainer" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/autoLocationUpdateContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:background="@drawable/profile_info_background"
+            android:padding="16dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/labelAutoLocationUpdate"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/tvAutoLocationUpdateLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/label_auto_location_update_toggle"
+                android:textColor="@color/secondary_yellow"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/switchAutoLocationUpdate"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchAutoLocationUpdate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                app:trackTint="@color/switch_track_tint"
+                app:thumbTint="@color/switch_thumb_tint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
             android:id="@+id/labelLocationCoords"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -201,7 +250,7 @@
             android:layout_marginTop="16dp"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/locationSharingContainer" />
+            app:layout_constraintTop_toBottomOf="@+id/autoLocationUpdateContainer" />
 
         <TextView
             android:id="@+id/tvLocationCoords"

@@ -192,6 +192,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         setupClickListeners()
         setupLocationSharingToggle()
+        setupAutoLocationUpdateToggle()
         setupChangePasswordClick()
         setupRadiusSlider()
         setupUpdateRangeButton()
@@ -254,6 +255,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             if (locationSharingEnabled) {
+                bnd.labelAutoLocationUpdate.visibility = View.VISIBLE
+                bnd.autoLocationUpdateContainer.visibility = View.VISIBLE
+                
+                val autoLocationUpdateEnabled = PreferenceData.getInstance().getAutoLocationUpdateEnabled(context)
+                bnd.switchAutoLocationUpdate.isChecked = autoLocationUpdateEnabled
                 val currentLocation = PreferenceData.getInstance().getCurrentLocation(context)
                 if (currentLocation != null) {
                     bnd.labelLocationCoords.visibility = View.VISIBLE
@@ -291,6 +297,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 bnd.labelRadius.visibility = View.GONE
                 bnd.radiusContainer.visibility = View.GONE
                 bnd.btnUpdateRange.visibility = View.GONE
+                bnd.labelAutoLocationUpdate.visibility = View.GONE
+                bnd.autoLocationUpdateContainer.visibility = View.GONE
             }
         } else if (currentUser != null && userId.isNotEmpty() && userId != currentUser.uid) {
             bnd.textView.text = getString(R.string.user_profile)
@@ -312,6 +320,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             
             bnd.labelLocationSharing.visibility = View.GONE
             bnd.locationSharingContainer.visibility = View.GONE
+            bnd.labelAutoLocationUpdate.visibility = View.GONE
+            bnd.autoLocationUpdateContainer.visibility = View.GONE
             bnd.tvChangePassword.visibility = View.GONE
             bnd.btnLogout.visibility = View.GONE
             bnd.btnLogin.visibility = View.GONE
@@ -457,6 +467,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         isUpdatingLocationSharing = true
                         getCurrentLocationAndUpdateGeofence(user.access)
                         WorkManagerHelper.startPeriodicLocationSync(requireContext(), user.access)
+                        
+                        val autoLocationUpdateEnabled = PreferenceData.getInstance()
+                            .getAutoLocationUpdateEnabled(context)
+                        if (autoLocationUpdateEnabled) {
+                            WorkManagerHelper.startAutoLocationUpdate(requireContext(), user.access)
+                        }
                     } else {
                         requestLocationPermission()
                         setToggleCheckedWithoutListener(false)
@@ -464,9 +480,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 } else {
                     isUpdatingLocationSharing = true
                     PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+                    PreferenceData.getInstance().setAutoLocationUpdateEnabled(context, false)
                     viewModel.deleteGeofence(user.access)
                     removeGeofence()
                     WorkManagerHelper.stopPeriodicLocationSync(requireContext())
+                    WorkManagerHelper.stopAutoLocationUpdate(requireContext())
                 }
             }
         }
@@ -476,6 +494,53 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         binding?.switchLocationSharing?.setOnCheckedChangeListener(null)
         binding?.switchLocationSharing?.isChecked = checked
         setupLocationSharingToggle()
+    }
+
+    private fun setupAutoLocationUpdateToggle() {
+        binding?.switchAutoLocationUpdate?.setOnCheckedChangeListener { _, isChecked ->
+            val user = PreferenceData.getInstance().getUser(context)
+            binding?.let { bnd ->
+                if (user == null || user.access.isEmpty()) {
+                    bnd.switchAutoLocationUpdate.isChecked = false
+                    Snackbar.make(
+                        bnd.switchAutoLocationUpdate,
+                        getString(R.string.no_user_logged_in),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                    return@setOnCheckedChangeListener
+                }
+
+                PreferenceData.getInstance().setAutoLocationUpdateEnabled(context, isChecked)
+
+                if (isChecked) {
+                    val isLocationSharingEnabled = PreferenceData.getInstance()
+                        .getLocationSharingEnabled(context)
+                    if (!isLocationSharingEnabled) {
+                        bnd.switchAutoLocationUpdate.isChecked = false
+                        PreferenceData.getInstance().setAutoLocationUpdateEnabled(context, false)
+                        Snackbar.make(
+                            bnd.switchAutoLocationUpdate,
+                            "Najprv musíte zapnúť zdieľanie polohy",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                        return@setOnCheckedChangeListener
+                    }
+                    WorkManagerHelper.startAutoLocationUpdate(requireContext(), user.access)
+                    Snackbar.make(
+                        bnd.switchAutoLocationUpdate,
+                        "Automatická aktualizácia polohy zapnutá",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                } else {
+                    WorkManagerHelper.stopAutoLocationUpdate(requireContext())
+                    Snackbar.make(
+                        bnd.switchAutoLocationUpdate,
+                        "Automatická aktualizácia polohy vypnutá",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
     }
 
     private fun checkLocationPermission(): Boolean {

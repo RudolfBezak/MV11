@@ -199,6 +199,19 @@ class PreferenceData private constructor() {
         private const val locationLatKey = "currentLocationLat"
         private const val locationLonKey = "currentLocationLon"
         private const val locationRadiusKey = "currentLocationRadius"
+        private const val autoLocationUpdateKey = "autoLocationUpdateEnabled"
+    }
+
+    fun setAutoLocationUpdateEnabled(context: Context?, enabled: Boolean) {
+        val sharedPref = getSharedPreferences(context) ?: return
+        val editor = sharedPref.edit()
+        editor.putBoolean(autoLocationUpdateKey, enabled)
+        editor.apply()
+    }
+
+    fun getAutoLocationUpdateEnabled(context: Context?): Boolean {
+        val sharedPref = getSharedPreferences(context) ?: return false
+        return sharedPref.getBoolean(autoLocationUpdateKey, false)
     }
 }
 
