@@ -84,6 +84,39 @@ class LocationUpdateWorker(
                         location.longitude,
                         radius
                     )
+                    
+                    // Po úspešnej aktualizácii geofence zavolať users list
+                    val lastUserCount = PreferenceData.getInstance().getLastUserCount(applicationContext)
+                    val listResult = repository.apiListGeofence(accessToken)
+                    if (listResult.second) {
+                        // Získať aktuálny počet používateľov z databázy (synchronne)
+                        val users = repository.getUsersSync().filterNotNull()
+                        val currentUserCount = users.size
+                        
+                        if (lastUserCount >= 0 && currentUserCount != lastUserCount) {
+                            val difference = currentUserCount - lastUserCount
+                            val message = when {
+                                difference > 0 -> "Pribudlo $difference ${if (difference == 1) "používateľ" else if (difference < 5) "používatelia" else "používateľov"}. Celkom okolo vás: $currentUserCount"
+                                difference < 0 -> "Ubudlo ${-difference} ${if (-difference == 1) "používateľ" else if (-difference < 5) "používatelia" else "používateľov"}. Celkom okolo vás: $currentUserCount"
+                                else -> "Okolo vás je $currentUserCount ${if (currentUserCount == 1) "používateľ" else if (currentUserCount < 5) "používatelia" else "používateľov"}"
+                            }
+                            NotificationHelper.showUserCountNotification(
+                                applicationContext,
+                                "Zmena počtu používateľov",
+                                message
+                            )
+                        } else if (lastUserCount < 0) {
+                            // Prvé načítanie - len uložiť počet
+                            NotificationHelper.showUserCountNotification(
+                                applicationContext,
+                                "Používatelia okolo vás",
+                                "Okolo vás je $currentUserCount ${if (currentUserCount == 1) "používateľ" else if (currentUserCount < 5) "používatelia" else "používateľov"}"
+                            )
+                        }
+                        
+                        PreferenceData.getInstance().setLastUserCount(applicationContext, currentUserCount)
+                    }
+                    
                     Result.success()
                 } else {
                     Log.e(TAG, "Location update failed: ${result.first}")

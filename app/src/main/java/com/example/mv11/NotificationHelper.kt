@@ -56,5 +56,34 @@ object NotificationHelper {
 
         NotificationManagerCompat.from(context).notify(notificationId, builder.build())
     }
+
+    fun showUserCountNotification(
+        context: Context,
+        title: String,
+        message: String
+    ) {
+        createNotificationChannel(context)
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID).apply {
+            setContentTitle(title)
+            setContentText(message)
+            setSmallIcon(android.R.drawable.ic_dialog_info)
+            priority = NotificationCompat.PRIORITY_DEFAULT
+            setAutoCancel(true)
+        }
+
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("NotificationHelper", "Chyba povolenie na notifikaciu")
+            return
+        }
+
+        // Použiť unikátne ID pre každú notifikáciu o používateľoch
+        val notificationId = System.currentTimeMillis().toInt()
+        NotificationManagerCompat.from(context).notify(notificationId, builder.build())
+    }
 }
 

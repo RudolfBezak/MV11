@@ -48,6 +48,13 @@ interface DbDao {
     fun getUsers(): LiveData<List<UserEntity?>>
 
     /**
+     * Získa všetkých používateľov z databázy synchronne (pre použitie v coroutines).
+     * suspend - asynchrónna operácia
+     */
+    @Query("select * from users")
+    suspend fun getUsersSync(): List<UserEntity?>
+
+    /**
      * Vymaže všetkých používateľov z databázy.
      * suspend - asynchrónna operácia
      */

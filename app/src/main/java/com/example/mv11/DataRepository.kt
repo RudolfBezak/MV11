@@ -299,6 +299,8 @@ class DataRepository private constructor(
 
     fun getUsers() = cache.getUsers()
 
+    suspend fun getUsersSync(): List<UserEntity?> = cache.getUsersSync()
+
     suspend fun clearDatabase() {
         cache.deleteUserItems()
     }

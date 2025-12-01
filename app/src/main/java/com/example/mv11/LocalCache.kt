@@ -52,6 +52,12 @@ class LocalCache(private val dao: DbDao) {
     fun getUsers(): LiveData<List<UserEntity?>> = dao.getUsers()
 
     /**
+     * Získa všetkých používateľov z databázy synchronne (pre použitie v coroutines).
+     * suspend - asynchrónna operácia
+     */
+    suspend fun getUsersSync(): List<UserEntity?> = dao.getUsersSync()
+
+    /**
      * Vymaže všetkých používateľov z databázy.
      * Používa sa pri odhlásení alebo reset aplikácie.
      */

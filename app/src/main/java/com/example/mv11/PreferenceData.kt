@@ -200,6 +200,7 @@ class PreferenceData private constructor() {
         private const val locationLonKey = "currentLocationLon"
         private const val locationRadiusKey = "currentLocationRadius"
         private const val autoLocationUpdateKey = "autoLocationUpdateEnabled"
+        private const val lastUserCountKey = "lastUserCount"
     }
 
     fun setAutoLocationUpdateEnabled(context: Context?, enabled: Boolean) {
@@ -212,6 +213,18 @@ class PreferenceData private constructor() {
     fun getAutoLocationUpdateEnabled(context: Context?): Boolean {
         val sharedPref = getSharedPreferences(context) ?: return false
         return sharedPref.getBoolean(autoLocationUpdateKey, false)
+    }
+
+    fun setLastUserCount(context: Context?, count: Int) {
+        val sharedPref = getSharedPreferences(context) ?: return
+        val editor = sharedPref.edit()
+        editor.putInt(lastUserCountKey, count)
+        editor.apply()
+    }
+
+    fun getLastUserCount(context: Context?): Int {
+        val sharedPref = getSharedPreferences(context) ?: return -1
+        return sharedPref.getInt(lastUserCountKey, -1)
     }
 }
 
