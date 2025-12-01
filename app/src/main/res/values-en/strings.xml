@@ -35,7 +35,7 @@
     
     <!-- Feed Fragment -->
     <string name="feed_title">List</string>
-    <string name="feed_subtitle">Current offers</string>
+    <string name="feed_subtitle">Current users</string>
     <string name="feed_item_image">Item image</string>
     
     <!-- Map Fragment -->
