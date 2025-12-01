@@ -194,6 +194,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         setupLocationSharingToggle()
         setupAutoLocationUpdateToggle()
         setupChangePasswordClick()
+        setupShowMapClick()
         setupRadiusSlider()
         setupUpdateRangeButton()
         setupPhotoButtons()
@@ -242,6 +243,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             bnd.btnLogout.visibility = View.VISIBLE
             bnd.btnLogin.visibility = View.GONE
             bnd.btnRegister.visibility = View.GONE
+            bnd.btnShowMap.visibility = View.GONE
             
             // Nevolať getUserProfile ak práve prebieha aktualizácia geofence - zbytočné volanie API
             if (currentUser.access.isNotEmpty() && !isUpdatingLocationSharing) {
@@ -331,6 +333,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             bnd.labelRadius.visibility = View.GONE
             bnd.radiusContainer.visibility = View.GONE
             bnd.btnUpdateRange.visibility = View.GONE
+            
+            bnd.btnShowMap.visibility = View.VISIBLE
         } else if (currentUser != null) {
             bnd.textView.text = getString(R.string.your_profile)
             
@@ -702,6 +706,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private fun setupChangePasswordClick() {
         binding?.tvChangePassword?.setOnClickListener {
             findNavController().navigate(R.id.action_profile_to_change_password)
+        }
+    }
+
+    private fun setupShowMapClick() {
+        binding?.btnShowMap?.setOnClickListener {
+            val userId = arguments?.getString("userId") ?: ""
+            val bundle = Bundle().apply {
+                putString("targetUserId", userId)
+            }
+            findNavController().navigate(R.id.action_profile_to_map, bundle)
         }
     }
 

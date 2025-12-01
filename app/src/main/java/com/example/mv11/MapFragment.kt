@@ -13,8 +13,10 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.mv11.databinding.FragmentMapBinding
+import kotlinx.coroutines.launch
 import com.google.android.material.snackbar.Snackbar
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
@@ -61,8 +63,16 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         
         binding?.let { bnd ->
             mapView = bnd.mapView
+            
+            val targetUserId = arguments?.getString("targetUserId") ?: ""
+            val isProfileMap = targetUserId.isNotEmpty()
+            
             mapView?.getMapboxMap()?.loadStyleUri(Style.MAPBOX_STREETS) {
-                setupUserMarkers()
+                if (isProfileMap) {
+                    setupProfileMapMarkers(targetUserId)
+                } else {
+                    setupUserMarkers()
+                }
             }
             
             bnd.bottomNavigationWidget.setActiveItem(BottomNavItem.MAP)
@@ -85,7 +95,11 @@ class MapFragment : Fragment(R.layout.fragment_map) {
             
             val user = PreferenceData.getInstance().getUser(requireContext())
             if (user != null && user.access.isNotEmpty()) {
-                viewModel.updateItems(user.access)
+                if (isProfileMap) {
+                    viewModel.updateItems(user.access)
+                } else {
+                    viewModel.updateItems(user.access)
+                }
             }
         }
     }
@@ -138,6 +152,85 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         }
     }
     
+    private fun setupProfileMapMarkers(targetUserId: String) {
+        val mapViewInstance = mapView
+        if (mapViewInstance != null) {
+            val annotationApi = mapViewInstance.annotations
+            pointAnnotationManager = annotationApi.createPointAnnotationManager()
+        }
+        
+        val user = PreferenceData.getInstance().getUser(requireContext())
+        if (user != null && user.access.isNotEmpty()) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val repository = DataRepository.getInstance(requireContext())
+                val listResult = repository.apiListGeofence(user.access)
+                
+                if (listResult.second && listResult.third != null) {
+                    val meObject = listResult.third
+                    val users = repository.getUsersSync().filterNotNull()
+                    val targetUser = users.find { it.uid == targetUserId }
+                    
+                    if (meObject != null && meObject.lat.isNotEmpty() && meObject.lon.isNotEmpty() && targetUser != null) {
+                        val lat = meObject.lat.toDoubleOrNull() ?: 0.0
+                        val lon = meObject.lon.toDoubleOrNull() ?: 0.0
+                        val radius = meObject.radius.toDoubleOrNull() ?: 100.0
+                        
+                        if (lat != 0.0 && lon != 0.0) {
+                            addProfileMapMarkers(lat, lon, radius, user, targetUser)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun addProfileMapMarkers(
+        centerLat: Double,
+        centerLon: Double,
+        radiusMeters: Double,
+        currentUser: com.example.mv11.User,
+        targetUser: UserEntity
+    ) {
+        mapView?.let { map ->
+            pointAnnotationManager?.deleteAll()
+            markerUserIdMap.clear()
+            
+            Log.d("MapFragment", "Pridávam markery pre profil mapu: aktuálny používateľ [$centerLat, $centerLon] a cieľový používateľ ${targetUser.name}")
+            
+            addCircleAroundUser(centerLat, centerLon, radiusMeters)
+            
+            val currentUserPhoto = getUserPhotoFromList(currentUser.uid, listOf(targetUser))
+            createMarkerWithPhoto(currentUser.name, currentUserPhoto, isCurrentUser = true) { bitmap ->
+                val pointAnnotationOptions = PointAnnotationOptions()
+                    .withPoint(Point.fromLngLat(centerLon, centerLat))
+                    .withIconImage(bitmap)
+                val annotation = pointAnnotationManager?.create(pointAnnotationOptions)
+                if (annotation != null) {
+                    markerUserIdMap[annotation.id] = currentUser.uid
+                }
+            }
+            
+            val randomPosition = generateRandomPositionInCircle(centerLat, centerLon, radiusMeters)
+            createMarkerWithPhoto(targetUser.name, targetUser.photo, isCurrentUser = false) { bitmap ->
+                val userMarkerOptions = PointAnnotationOptions()
+                    .withPoint(Point.fromLngLat(randomPosition.second, randomPosition.first))
+                    .withIconImage(bitmap)
+                val annotation = pointAnnotationManager?.create(userMarkerOptions)
+                if (annotation != null) {
+                    markerUserIdMap[annotation.id] = targetUser.uid
+                }
+                Log.d("MapFragment", "Pridávam marker pre používateľa: ${targetUser.name} na náhodnej pozícii [${randomPosition.first}, ${randomPosition.second}]")
+            }
+            
+            map.getMapboxMap().setCamera(
+                CameraOptions.Builder()
+                    .center(Point.fromLngLat(centerLon, centerLat))
+                    .zoom(calculateZoomForRadius(radiusMeters))
+                    .build()
+            )
+        }
+    }
+
     private fun addCurrentUserMarker(lat: Double, lon: Double, radius: Double, users: List<UserEntity>) {
         mapView?.let { map ->
             // Clear existing markers and map

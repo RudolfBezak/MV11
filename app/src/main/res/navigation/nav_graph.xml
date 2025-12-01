@@ -67,6 +67,10 @@
         android:id="@+id/mapFragment"
         android:name="com.example.mv11.MapFragment"
         android:label="Mapa">
+        <argument
+            android:name="targetUserId"
+            android:defaultValue=""
+            app:argType="string" />
         <action
             android:id="@+id/action_map_to_profile"
             app:destination="@id/profileFragment" />
@@ -92,6 +96,10 @@
         <action
             android:id="@+id/action_profile_to_change_password"
             app:destination="@id/changePasswordFragment" />
+
+        <action
+            android:id="@+id/action_profile_to_map"
+            app:destination="@id/mapFragment" />
     </fragment>
 
     <fragment
