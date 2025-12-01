@@ -44,6 +44,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private val DEFAULT_RADIUS = 100.0
     private var currentPhotoUri: Uri? = null
     private var tempImageFile: File? = null
+    private var isUpdatingLocationSharing = false // Flag to prevent toggle reset during update
 
     private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == android.app.Activity.RESULT_OK) {
@@ -106,10 +107,36 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 binding?.let { bnd ->
                     if (result.second) {
                         Log.d("ProfileFragment", "Geofence updated successfully")
+                        // Uistiť sa, že toggle zostane zapnutý po úspešnom update
+                        PreferenceData.getInstance().setLocationSharingEnabled(context, true)
+                        setToggleCheckedWithoutListener(true)
                         val currentLocation = PreferenceData.getInstance().getCurrentLocation(context)
                         if (currentLocation != null) {
-                            updateUI()
+                            // Aktualizovať UI prvky bez resetovania toggle
+                            bnd.labelLocationCoords.visibility = View.VISIBLE
+                            bnd.tvLocationCoords.visibility = View.VISIBLE
+                            bnd.tvLocationCoords.text = "Lat: ${String.format("%.6f", currentLocation.first)}\nLon: ${String.format("%.6f", currentLocation.second)}"
+                            
+                            bnd.labelRadius.visibility = View.VISIBLE
+                            bnd.radiusContainer.visibility = View.VISIBLE
+                            bnd.btnUpdateRange.visibility = View.VISIBLE
+                            
+                            val radiusValues = listOf(100, 200, 500, 1000, 5000, 10000)
+                            val currentRadius = currentLocation.third.toInt()
+                            val closestIndex = radiusValues.indexOfFirst { it >= currentRadius }
+                                .takeIf { it != -1 } ?: (radiusValues.size - 1)
+                            val indexToUse = if (closestIndex > 0 && 
+                                kotlin.math.abs(radiusValues[closestIndex] - currentRadius) > 
+                                kotlin.math.abs(radiusValues[closestIndex - 1] - currentRadius)) {
+                                closestIndex - 1
+                            } else {
+                                closestIndex
+                            }
+                            
+                            bnd.sliderRadius.value = indexToUse.toFloat()
+                            bnd.tvRadiusValue.text = "${radiusValues[indexToUse]} m"
                         }
+                        isUpdatingLocationSharing = false
                         val targetView = bnd.btnUpdateRange ?: bnd.switchLocationSharing
                         Snackbar.make(
                             targetView,
@@ -118,9 +145,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         ).show()
                     } else {
                         Log.e("ProfileFragment", "Geofence update failed: ${result.first}")
-                        bnd.switchLocationSharing.isChecked = false
                         PreferenceData.getInstance().setLocationSharingEnabled(context, false)
                         PreferenceData.getInstance().clearCurrentLocation(context)
+                        isUpdatingLocationSharing = false
+                        setToggleCheckedWithoutListener(false)
                         updateUI()
                         Snackbar.make(
                             bnd.switchLocationSharing,
@@ -138,8 +166,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     if (result.second) {
                         Log.d("ProfileFragment", "Geofence deleted successfully")
                         PreferenceData.getInstance().clearCurrentLocation(context)
+                        PreferenceData.getInstance().setLocationSharingEnabled(context, false)
                         removeGeofence()
                         WorkManagerHelper.stopPeriodicLocationSync(requireContext())
+                        isUpdatingLocationSharing = false
+                        setToggleCheckedWithoutListener(false)
                         updateUI()
                         Snackbar.make(
                             bnd.switchLocationSharing,
@@ -148,6 +179,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         ).show()
                     } else {
                         Log.e("ProfileFragment", "Geofence delete failed: ${result.first}")
+                        isUpdatingLocationSharing = false
                         Snackbar.make(
                             bnd.switchLocationSharing,
                             result.first,
@@ -210,12 +242,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             bnd.btnLogin.visibility = View.GONE
             bnd.btnRegister.visibility = View.GONE
             
-            if (currentUser.access.isNotEmpty()) {
+            // Nevolať getUserProfile ak práve prebieha aktualizácia geofence - zbytočné volanie API
+            if (currentUser.access.isNotEmpty() && !isUpdatingLocationSharing) {
                 viewModel.getUserProfile(currentUser.access, currentUser.uid)
             }
 
             val locationSharingEnabled = PreferenceData.getInstance().getLocationSharingEnabled(context)
-            bnd.switchLocationSharing.isChecked = locationSharingEnabled
+            // Neresetovať toggle ak práve prebieha update
+            if (!isUpdatingLocationSharing) {
+                bnd.switchLocationSharing.isChecked = locationSharingEnabled
+            }
 
             if (locationSharingEnabled) {
                 val currentLocation = PreferenceData.getInstance().getCurrentLocation(context)
@@ -314,7 +350,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
             
             val locationSharingEnabled = PreferenceData.getInstance().getLocationSharingEnabled(context)
-            bnd.switchLocationSharing.isChecked = locationSharingEnabled
+            // Neresetovať toggle ak práve prebieha update
+            if (!isUpdatingLocationSharing) {
+                bnd.switchLocationSharing.isChecked = locationSharingEnabled
+            }
             
             bnd.labelLocationCoords.visibility = View.GONE
             bnd.tvLocationCoords.visibility = View.GONE
@@ -396,10 +435,15 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     private fun setupLocationSharingToggle() {
         binding?.switchLocationSharing?.setOnCheckedChangeListener { _, isChecked ->
+            // Ignorovať zmeny počas aktualizácie (aby sa listener nespustil pri programatickej zmene)
+            if (isUpdatingLocationSharing) {
+                return@setOnCheckedChangeListener
+            }
+            
             val user = PreferenceData.getInstance().getUser(context)
             binding?.let { bnd ->
                 if (user == null || user.access.isEmpty()) {
-                    bnd.switchLocationSharing.isChecked = false
+                    setToggleCheckedWithoutListener(false)
                     Snackbar.make(
                         bnd.switchLocationSharing,
                         getString(R.string.no_user_logged_in),
@@ -410,13 +454,15 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
                 if (isChecked) {
                     if (checkLocationPermission()) {
+                        isUpdatingLocationSharing = true
                         getCurrentLocationAndUpdateGeofence(user.access)
                         WorkManagerHelper.startPeriodicLocationSync(requireContext(), user.access)
                     } else {
                         requestLocationPermission()
-                        bnd.switchLocationSharing.isChecked = false
+                        setToggleCheckedWithoutListener(false)
                     }
                 } else {
+                    isUpdatingLocationSharing = true
                     PreferenceData.getInstance().setLocationSharingEnabled(context, false)
                     viewModel.deleteGeofence(user.access)
                     removeGeofence()
@@ -424,6 +470,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 }
             }
         }
+    }
+    
+    private fun setToggleCheckedWithoutListener(checked: Boolean) {
+        binding?.switchLocationSharing?.setOnCheckedChangeListener(null)
+        binding?.switchLocationSharing?.isChecked = checked
+        setupLocationSharingToggle()
     }
 
     private fun checkLocationPermission(): Boolean {
@@ -484,14 +536,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     Log.d("ProfileFragment", "poloha posledna $location")
                     PreferenceData.getInstance().setLocationSharingEnabled(context, true)
                     PreferenceData.getInstance().setCurrentLocation(context, location.latitude, location.longitude, DEFAULT_RADIUS)
+                    // Nevolať updateUI() tu - resetuje toggle na hodnotu z SharedPreferences pred uložením
+                    // Observer geofenceUpdateResult zavolá updateUI() po úspešnom update
                     viewModel.updateGeofence(accessToken, location.latitude, location.longitude, DEFAULT_RADIUS)
                     setupGeofence(location)
                     WorkManagerHelper.startPeriodicLocationSync(requireContext(), accessToken)
-                    updateUI()
                 } else {
                     Log.e("ProfileFragment", "Location is null")
-                    bnd.switchLocationSharing.isChecked = false
                     PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+                    isUpdatingLocationSharing = false
+                    setToggleCheckedWithoutListener(false)
                     Snackbar.make(
                         bnd.switchLocationSharing,
                         getString(R.string.location_not_available),
@@ -502,8 +556,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }.addOnFailureListener { exception ->
             Log.e("ProfileFragment", "Failed to get location: ${exception.message}", exception)
             binding?.let { bnd ->
-                bnd.switchLocationSharing.isChecked = false
                 PreferenceData.getInstance().setLocationSharingEnabled(context, false)
+                isUpdatingLocationSharing = false
+                setToggleCheckedWithoutListener(false)
                 Snackbar.make(
                     bnd.switchLocationSharing,
                     getString(R.string.location_error),
@@ -551,12 +606,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 addOnSuccessListener {
                     Log.d("ProfileFragment", "geofence vytvoreny")
                 }
-                addOnFailureListener {
-                    it.printStackTrace()
-                    binding?.let { bnd ->
-                        bnd.switchLocationSharing.isChecked = false
-                        PreferenceData.getInstance().setLocationSharingEnabled(context, false)
-                    }
+                addOnFailureListener { exception ->
+                    Log.e("ProfileFragment", "Failed to add geofence: ${exception.message}", exception)
+                    // Nezresetovať toggle ak geofence zlyhá - API update už bol úspešný
+                    // Toggle zostane zapnutý, len geofence monitoring nebude fungovať
                 }
             }
         }
