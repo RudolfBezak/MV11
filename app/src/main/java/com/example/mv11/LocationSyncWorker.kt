@@ -42,8 +42,8 @@ class LocationSyncWorker(
                 Log.d(TAG, "Location sync successful")
                 NotificationHelper.showNotification(
                     applicationContext,
-                    "Synchronizácia dokončená",
-                    "Dáta používateľov boli úspešne aktualizované"
+                    applicationContext.getString(R.string.location_sync_completed),
+                    applicationContext.getString(R.string.location_sync_success)
                 )
                 Result.success()
             } else {

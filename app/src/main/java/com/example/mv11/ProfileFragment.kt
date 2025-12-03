@@ -539,7 +539,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         PreferenceData.getInstance().setAutoLocationUpdateEnabled(context, false)
                         Snackbar.make(
                             bnd.switchAutoLocationUpdate,
-                            "Najprv musíte zapnúť zdieľanie polohy",
+                            getString(R.string.msg_enable_location_sharing_first),
                             Snackbar.LENGTH_LONG
                         ).show()
                         return@setOnCheckedChangeListener
@@ -547,14 +547,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     WorkManagerHelper.startAutoLocationUpdate(requireContext(), user.access)
                     Snackbar.make(
                         bnd.switchAutoLocationUpdate,
-                        "Automatická aktualizácia polohy zapnutá",
+                        getString(R.string.msg_auto_location_update_enabled),
                         Snackbar.LENGTH_SHORT
                     ).show()
                 } else {
                     WorkManagerHelper.stopAutoLocationUpdate(requireContext())
                     Snackbar.make(
                         bnd.switchAutoLocationUpdate,
-                        "Automatická aktualizácia polohy vypnutá",
+                        getString(R.string.msg_auto_location_update_disabled),
                         Snackbar.LENGTH_SHORT
                     ).show()
                 }

@@ -1,0 +1,132 @@
+<resources>
+    <!-- App Info -->
+    <string name="app_name">MV11</string>
+    
+    <!-- Intro Fragment -->
+    <string name="intro_title">Bienvenue dans l\'application</string>
+    <string name="btn_login">Connexion</string>
+    <string name="btn_signup">S\'inscrire</string>
+    <string name="btn_map">Carte</string>
+    <string name="btn_users">Utilisateurs</string>
+    <string name="btn_profile">Profil</string>
+    
+    <!-- Login Fragment -->
+    <string name="login_title">Bienvenue dans l\'application</string>
+    <string name="login_subtitle">Connectez-vous à votre compte</string>
+    <string name="hint_email">Nom ou email</string>
+    <string name="hint_password">Mot de passe</string>
+    <string name="forgot_password">Mot de passe oublié ?</string>
+    <string name="btn_login_submit">Se connecter</string>
+    <string name="no_account">Vous n\'avez pas de compte ?</string>
+    <string name="signup_link">S\'inscrire</string>
+    <string name="toast_enter_email">Veuillez entrer le nom ou l\'email</string>
+    <string name="toast_enter_password">Veuillez entrer le mot de passe</string>
+    <string name="toast_enter_email_for_reset">Veuillez entrer l\'email pour réinitialiser le mot de passe</string>
+    <string name="toast_login_success">Connexion réussie !</string>
+    <string name="toast_forgot_not_implemented">La fonctionnalité \'Mot de passe oublié\' n\'est pas encore implémentée</string>
+    <string name="error_login_wrong_credentials">Le nom ou le mot de passe est incorrect</string>
+    
+    <!-- Signup Fragment -->
+    <string name="signup_title">Inscription</string>
+    <string name="label_name">Nom :</string>
+    <string name="label_email">Email :</string>
+    <string name="hint_name">Votre nom</string>
+    <string name="hint_email_placeholder">votre@email.com</string>
+    <string name="btn_register">S\'inscrire</string>
+    <string name="have_account">Vous avez déjà un compte ?</string>
+    <string name="login_link">Se connecter</string>
+    <string name="registration_success">Inscription réussie !</string>
+    <string name="error_username_exists">Le nom d\'utilisateur existe déjà. Veuillez choisir un autre nom d\'utilisateur.</string>
+    <string name="error_email_exists">L\'email existe déjà. Veuillez choisir un autre email.</string>
+    
+    <!-- Profile Fragment -->
+    <string name="profile_title">Profil utilisateur</string>
+    <string name="profile_subtitle">Vos informations personnelles</string>
+    <string name="label_name_profile">Nom :</string>
+    <string name="label_email_profile">Email :</string>
+    <string name="label_uid">UID :</string>
+    <string name="label_location_sharing">Partage de localisation</string>
+    <string name="label_auto_location_update">Mise à jour automatique de la localisation</string>
+    <string name="label_auto_location_update_toggle">Mettre à jour le géofence toutes les 30 minutes</string>
+    <string name="btn_logout">Se déconnecter</string>
+    <string name="btn_login_profile">Se connecter</string>
+    <string name="btn_register_profile">S\'inscrire</string>
+    <string name="no_user_logged_in">Vous n\'êtes pas connecté</string>
+    <string name="logout_success">Déconnexion réussie</string>
+    <string name="logout_error">Erreur de déconnexion</string>
+    <string name="profile_not_logged_in_title">Vous n\'êtes pas connecté</string>
+    <string name="profile_not_logged_in_subtitle">Vous devez vous connecter pour voir votre profil</string>
+    
+    <!-- Feed Fragment -->
+    <string name="feed_title">Liste</string>
+    <string name="feed_subtitle">Utilisateurs actuels</string>
+    <string name="feed_item_image">Image de l\'élément</string>
+    
+    <!-- Map Fragment -->
+    <string name="map_title">Carte des utilisateurs</string>
+    
+    <!-- Navigation -->
+    <string name="nav_map">Carte</string>
+    <string name="nav_list">Liste</string>
+    <string name="nav_profile">Profil</string>
+    
+    <!-- Change Password Fragment -->
+    <string name="change_password_title">Changer le mot de passe</string>
+    <string name="change_password_link">Changer/Réinitialiser le mot de passe</string>
+    <string name="hint_old_password">Ancien mot de passe</string>
+    <string name="hint_new_password">Nouveau mot de passe</string>
+    <string name="btn_change_password">Changer le mot de passe</string>
+    <string name="forgot_password_small">Mot de passe oublié</string>
+    <string name="toast_enter_old_password">Veuillez entrer l\'ancien mot de passe</string>
+    <string name="toast_enter_new_password">Veuillez entrer le nouveau mot de passe</string>
+    <string name="password_change_success">Le mot de passe a été modifié avec succès</string>
+    <string name="password_reset_email_sent">L\'email de réinitialisation du mot de passe a été envoyé</string>
+    <string name="error_email_not_found">Email introuvable</string>
+    
+    <!-- Location Sharing -->
+    <string name="location_sharing_enabled">Partage de localisation activé</string>
+    <string name="location_sharing_disabled">Partage de localisation désactivé</string>
+    <string name="location_permission_denied">L\'autorisation de localisation est requise pour partager la localisation</string>
+    <string name="location_not_available">La localisation n\'est pas disponible</string>
+    <string name="location_error">Erreur lors de l\'obtention de la localisation</string>
+    <string name="error_enable_geofence">Vous devez activer le géofence pour voir les utilisateurs</string>
+    <string name="label_location_coords">Coordonnées de localisation</string>
+    <string name="label_radius">Rayon (m)</string>
+    <string name="btn_update_range">Mettre à jour le rayon</string>
+    <string name="radius_updated">Le rayon a été mis à jour avec succès</string>
+    <string name="user_photo">Photo de profil utilisateur</string>
+    <string name="upload_photo">Télécharger une photo</string>
+    <string name="delete_photo">Supprimer la photo</string>
+    <string name="photo_uploaded">La photo a été téléchargée avec succès</string>
+    <string name="photo_deleted">La photo a été supprimée avec succès</string>
+    <string name="photo_upload_failed">Échec du téléchargement de la photo</string>
+    <string name="photo_delete_failed">Échec de la suppression de la photo</string>
+    <string name="your_profile">Votre profil</string>
+    <string name="user_profile">Profil utilisateur</string>
+    <string name="btn_show_map">Afficher la carte</string>
+    <string name="label_time_interval">Partager ma localisation pendant :</string>
+    <string name="label_time_from">de :</string>
+    <string name="label_time_to">à :</string>
+    
+    <!-- Notifications -->
+    <string name="notification_channel_name">MOBV Devoir</string>
+    <string name="notification_channel_description">Description de la notification</string>
+    <string name="notification_permission_error">Erreur d\'autorisation de notification</string>
+    <string name="notification_user_count_change">Changement du nombre d\'utilisateurs</string>
+    <string name="notification_users_around_you">Utilisateurs autour de vous</string>
+    <string name="notification_users_added">%1$d %2$s ajouté(s). Total autour de vous : %3$d</string>
+    <string name="notification_users_removed">%1$d %2$s retiré(s). Total autour de vous : %3$d</string>
+    <string name="notification_users_count">Il y a %1$d %2$s autour de vous</string>
+    <string name="user_singular">utilisateur</string>
+    <string name="user_plural_2_4">utilisateurs</string>
+    <string name="user_plural_5_plus">utilisateurs</string>
+    
+    <!-- Profile Messages -->
+    <string name="msg_enable_location_sharing_first">Vous devez d\'abord activer le partage de localisation</string>
+    <string name="msg_auto_location_update_enabled">Mise à jour automatique de la localisation activée</string>
+    <string name="msg_auto_location_update_disabled">Mise à jour automatique de la localisation désactivée</string>
+    
+    <!-- Location Sync -->
+    <string name="location_sync_completed">Synchronisation terminée</string>
+    <string name="location_sync_success">Les données des utilisateurs ont été mises à jour avec succès</string>
+</resources>

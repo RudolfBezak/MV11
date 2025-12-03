@@ -108,4 +108,26 @@
     <string name="label_time_interval">Zdieľaj moju polohu v časoch:</string>
     <string name="label_time_from">od:</string>
     <string name="label_time_to">do:</string>
+    
+    <!-- Notifications -->
+    <string name="notification_channel_name">MOBV Zadanie</string>
+    <string name="notification_channel_description">Popis notifikacie</string>
+    <string name="notification_permission_error">Chyba povolenie na notifikaciu</string>
+    <string name="notification_user_count_change">Zmena počtu používateľov</string>
+    <string name="notification_users_around_you">Používatelia okolo vás</string>
+    <string name="notification_users_added">Pribudlo %1$d %2$s. Celkom okolo vás: %3$d</string>
+    <string name="notification_users_removed">Ubudlo %1$d %2$s. Celkom okolo vás: %3$d</string>
+    <string name="notification_users_count">Okolo vás je %1$d %2$s</string>
+    <string name="user_singular">používateľ</string>
+    <string name="user_plural_2_4">používatelia</string>
+    <string name="user_plural_5_plus">používateľov</string>
+    
+    <!-- Profile Messages -->
+    <string name="msg_enable_location_sharing_first">Najprv musíte zapnúť zdieľanie polohy</string>
+    <string name="msg_auto_location_update_enabled">Automatická aktualizácia polohy zapnutá</string>
+    <string name="msg_auto_location_update_disabled">Automatická aktualizácia polohy vypnutá</string>
+    
+    <!-- Location Sync -->
+    <string name="location_sync_completed">Synchronizácia dokončená</string>
+    <string name="location_sync_success">Dáta používateľov boli úspešne aktualizované</string>
 </resources>

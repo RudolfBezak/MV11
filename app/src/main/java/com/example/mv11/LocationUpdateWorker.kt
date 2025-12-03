@@ -108,22 +108,38 @@ class LocationUpdateWorker(
                         
                         if (lastUserCount >= 0 && currentUserCount != lastUserCount) {
                             val difference = currentUserCount - lastUserCount
+                            val userWord = when {
+                                kotlin.math.abs(difference) == 1 -> applicationContext.getString(R.string.user_singular)
+                                kotlin.math.abs(difference) < 5 -> applicationContext.getString(R.string.user_plural_2_4)
+                                else -> applicationContext.getString(R.string.user_plural_5_plus)
+                            }
                             val message = when {
-                                difference > 0 -> "Pribudlo $difference ${if (difference == 1) "používateľ" else if (difference < 5) "používatelia" else "používateľov"}. Celkom okolo vás: $currentUserCount"
-                                difference < 0 -> "Ubudlo ${-difference} ${if (-difference == 1) "používateľ" else if (-difference < 5) "používatelia" else "používateľov"}. Celkom okolo vás: $currentUserCount"
-                                else -> "Okolo vás je $currentUserCount ${if (currentUserCount == 1) "používateľ" else if (currentUserCount < 5) "používatelia" else "používateľov"}"
+                                difference > 0 -> applicationContext.getString(R.string.notification_users_added, difference, userWord, currentUserCount)
+                                difference < 0 -> applicationContext.getString(R.string.notification_users_removed, -difference, userWord, currentUserCount)
+                                else -> {
+                                    val currentUserWord = when {
+                                        currentUserCount == 1 -> applicationContext.getString(R.string.user_singular)
+                                        currentUserCount < 5 -> applicationContext.getString(R.string.user_plural_2_4)
+                                        else -> applicationContext.getString(R.string.user_plural_5_plus)
+                                    }
+                                    applicationContext.getString(R.string.notification_users_count, currentUserCount, currentUserWord)
+                                }
                             }
                             NotificationHelper.showUserCountNotification(
                                 applicationContext,
-                                "Zmena počtu používateľov",
+                                applicationContext.getString(R.string.notification_user_count_change),
                                 message
                             )
                         } else if (lastUserCount < 0) {
-                            // Prvé načítanie - len uložiť počet
+                            val currentUserWord = when {
+                                currentUserCount == 1 -> applicationContext.getString(R.string.user_singular)
+                                currentUserCount < 5 -> applicationContext.getString(R.string.user_plural_2_4)
+                                else -> applicationContext.getString(R.string.user_plural_5_plus)
+                            }
                             NotificationHelper.showUserCountNotification(
                                 applicationContext,
-                                "Používatelia okolo vás",
-                                "Okolo vás je $currentUserCount ${if (currentUserCount == 1) "používateľ" else if (currentUserCount < 5) "používatelia" else "používateľov"}"
+                                applicationContext.getString(R.string.notification_users_around_you),
+                                applicationContext.getString(R.string.notification_users_count, currentUserCount, currentUserWord)
                             )
                         }
                         

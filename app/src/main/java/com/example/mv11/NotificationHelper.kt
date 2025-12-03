@@ -13,15 +13,13 @@ import androidx.core.app.NotificationManagerCompat
 
 object NotificationHelper {
     private const val CHANNEL_ID = "kanal-1"
-    private const val CHANNEL_NAME = "MOBV Zadanie"
-    private const val CHANNEL_DESCRIPTION = "Popis notifikacie"
     private const val NOTIFICATION_ID = 1
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
-                description = CHANNEL_DESCRIPTION
+            val channel = NotificationChannel(CHANNEL_ID, context.getString(R.string.notification_channel_name), importance).apply {
+                description = context.getString(R.string.notification_channel_description)
             }
 
             val notificationManager: NotificationManager =
@@ -50,7 +48,7 @@ object NotificationHelper {
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.d("NotificationHelper", "Chyba povolenie na notifikaciu")
+            Log.d("NotificationHelper", context.getString(R.string.notification_permission_error))
             return
         }
 
@@ -77,7 +75,7 @@ object NotificationHelper {
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.d("NotificationHelper", "Chyba povolenie na notifikaciu")
+            Log.d("NotificationHelper", context.getString(R.string.notification_permission_error))
             return
         }
 

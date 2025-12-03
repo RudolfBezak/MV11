@@ -6,20 +6,25 @@
     <string name="intro_title">Welcome to App</string>
     <string name="btn_login">Login</string>
     <string name="btn_signup">Sign Up</string>
+    <string name="btn_map">Map</string>
+    <string name="btn_users">Users</string>
+    <string name="btn_profile">Profile</string>
     
     <!-- Login Fragment -->
     <string name="login_title">Welcome to App</string>
     <string name="login_subtitle">Log in to your account</string>
-    <string name="hint_email">Email</string>
+    <string name="hint_email">Name or email</string>
     <string name="hint_password">Password</string>
     <string name="forgot_password">Forgot password?</string>
     <string name="btn_login_submit">Log In</string>
     <string name="no_account">Don\'t have an account?</string>
     <string name="signup_link">Sign Up</string>
-    <string name="toast_enter_email">Please enter email</string>
+    <string name="toast_enter_email">Please enter name or email</string>
     <string name="toast_enter_password">Please enter password</string>
+    <string name="toast_enter_email_for_reset">Please enter email for password reset</string>
     <string name="toast_login_success">Login successful!</string>
     <string name="toast_forgot_not_implemented">\'Forgot password\' feature not implemented yet</string>
+    <string name="error_login_wrong_credentials">Name or password is incorrect</string>
     
     <!-- Signup Fragment -->
     <string name="signup_title">Sign Up</string>
@@ -28,10 +33,29 @@
     <string name="hint_name">Your name</string>
     <string name="hint_email_placeholder">your@email.com</string>
     <string name="btn_register">Register</string>
+    <string name="have_account">Already have an account?</string>
+    <string name="login_link">Log In</string>
+    <string name="registration_success">Registration successful!</string>
+    <string name="error_username_exists">Username already exists. Please choose a different username.</string>
+    <string name="error_email_exists">Email already exists. Please choose a different email.</string>
     
     <!-- Profile Fragment -->
     <string name="profile_title">User Profile</string>
     <string name="profile_subtitle">Your personal information</string>
+    <string name="label_name_profile">Name:</string>
+    <string name="label_email_profile">Email:</string>
+    <string name="label_uid">UID:</string>
+    <string name="label_location_sharing">Location Sharing</string>
+    <string name="label_auto_location_update">Automatic Location Update</string>
+    <string name="label_auto_location_update_toggle">Update geofence every 30 minutes</string>
+    <string name="btn_logout">Log Out</string>
+    <string name="btn_login_profile">Log In</string>
+    <string name="btn_register_profile">Sign Up</string>
+    <string name="no_user_logged_in">You are not logged in</string>
+    <string name="logout_success">Logout successful</string>
+    <string name="logout_error">Logout error</string>
+    <string name="profile_not_logged_in_title">You are not logged in</string>
+    <string name="profile_not_logged_in_subtitle">You must log in to view your profile</string>
     
     <!-- Feed Fragment -->
     <string name="feed_title">List</string>
@@ -45,5 +69,65 @@
     <string name="nav_map">Map</string>
     <string name="nav_list">List</string>
     <string name="nav_profile">Profile</string>
+    
+    <!-- Change Password Fragment -->
+    <string name="change_password_title">Change Password</string>
+    <string name="change_password_link">Change/Reset Password</string>
+    <string name="hint_old_password">Old password</string>
+    <string name="hint_new_password">New password</string>
+    <string name="btn_change_password">Change Password</string>
+    <string name="forgot_password_small">Forgot password</string>
+    <string name="toast_enter_old_password">Please enter old password</string>
+    <string name="toast_enter_new_password">Please enter new password</string>
+    <string name="password_change_success">Password was successfully changed</string>
+    <string name="password_reset_email_sent">Password reset email has been sent</string>
+    <string name="error_email_not_found">Email not found</string>
+    
+    <!-- Location Sharing -->
+    <string name="location_sharing_enabled">Location sharing enabled</string>
+    <string name="location_sharing_disabled">Location sharing disabled</string>
+    <string name="location_permission_denied">Location permission is required for sharing location</string>
+    <string name="location_not_available">Location is not available</string>
+    <string name="location_error">Error getting location</string>
+    <string name="error_enable_geofence">You must enable geofence to see users</string>
+    <string name="label_location_coords">Location Coordinates</string>
+    <string name="label_radius">Radius (m)</string>
+    <string name="btn_update_range">Update Radius</string>
+    <string name="radius_updated">Radius was successfully updated</string>
+    <string name="user_photo">User profile photo</string>
+    <string name="upload_photo">Upload Photo</string>
+    <string name="delete_photo">Delete Photo</string>
+    <string name="photo_uploaded">Photo was successfully uploaded</string>
+    <string name="photo_deleted">Photo was successfully deleted</string>
+    <string name="photo_upload_failed">Failed to upload photo</string>
+    <string name="photo_delete_failed">Failed to delete photo</string>
+    <string name="your_profile">Your Profile</string>
+    <string name="user_profile">User Profile</string>
+    <string name="btn_show_map">Show Map</string>
+    <string name="label_time_interval">Share my location during:</string>
+    <string name="label_time_from">from:</string>
+    <string name="label_time_to">to:</string>
+    
+    <!-- Notifications -->
+    <string name="notification_channel_name">MOBV Assignment</string>
+    <string name="notification_channel_description">Notification description</string>
+    <string name="notification_permission_error">Notification permission error</string>
+    <string name="notification_user_count_change">User Count Change</string>
+    <string name="notification_users_around_you">Users Around You</string>
+    <string name="notification_users_added">%1$d %2$s added. Total around you: %3$d</string>
+    <string name="notification_users_removed">%1$d %2$s removed. Total around you: %3$d</string>
+    <string name="notification_users_count">There are %1$d %2$s around you</string>
+    <string name="user_singular">user</string>
+    <string name="user_plural_2_4">users</string>
+    <string name="user_plural_5_plus">users</string>
+    
+    <!-- Profile Messages -->
+    <string name="msg_enable_location_sharing_first">You must enable location sharing first</string>
+    <string name="msg_auto_location_update_enabled">Automatic location update enabled</string>
+    <string name="msg_auto_location_update_disabled">Automatic location update disabled</string>
+    
+    <!-- Location Sync -->
+    <string name="location_sync_completed">Synchronization Completed</string>
+    <string name="location_sync_success">User data has been successfully updated</string>
 </resources>
 

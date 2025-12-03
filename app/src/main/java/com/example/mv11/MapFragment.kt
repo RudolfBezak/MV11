@@ -85,7 +85,7 @@ class MapFragment : Fragment(R.layout.fragment_map) {
                 evento.getContentIfNotHandled()?.let { message ->
                     if (message.isNotEmpty()) {
                         if (message == "MUSIS_SI_ZAPNUT_GEOFENCE") {
-                            Snackbar.make(bnd.root, "Musíš si zapnúť geofence na videnie používateľov", Snackbar.LENGTH_LONG).show()
+                            Snackbar.make(bnd.root, getString(R.string.error_enable_geofence), Snackbar.LENGTH_LONG).show()
                         } else {
                             Snackbar.make(bnd.root, message, Snackbar.LENGTH_SHORT).show()
                         }
