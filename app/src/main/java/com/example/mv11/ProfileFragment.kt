@@ -116,6 +116,22 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         // Uistiť sa, že toggle zostane zapnutý po úspešnom update
                         PreferenceData.getInstance().setLocationSharingEnabled(context, true)
                         setToggleCheckedWithoutListener(true)
+                        
+                        // Show time interval and auto location update containers
+                        bnd.labelAutoLocationUpdate.visibility = View.VISIBLE
+                        bnd.autoLocationUpdateContainer.visibility = View.VISIBLE
+                        
+                        bnd.labelTimeInterval.visibility = View.VISIBLE
+                        bnd.timeIntervalContainer.visibility = View.VISIBLE
+                        
+                        val timeFrom = PreferenceData.getInstance().getLocationSharingTimeFrom(context)
+                        val timeTo = PreferenceData.getInstance().getLocationSharingTimeTo(context)
+                        bnd.etTimeFrom.setText(timeFrom)
+                        bnd.etTimeTo.setText(timeTo)
+                        
+                        val autoLocationUpdateEnabled = PreferenceData.getInstance().getAutoLocationUpdateEnabled(context)
+                        bnd.switchAutoLocationUpdate.isChecked = autoLocationUpdateEnabled
+                        
                         val currentLocation = PreferenceData.getInstance().getCurrentLocation(context)
                         if (currentLocation != null) {
                             // Aktualizovať UI prvky bez resetovania toggle
