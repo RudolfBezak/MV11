@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -49,6 +50,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private var currentPhotoUri: Uri? = null
     private var tempImageFile: File? = null
     private var isUpdatingLocationSharing = false // Flag to prevent toggle reset during update
+    private var currentPhotoUrl: String? = null
 
     private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == android.app.Activity.RESULT_OK) {
@@ -905,7 +907,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             evento.getContentIfNotHandled()?.let { result ->
                 binding?.let { bnd ->
                     if (result.second != null) {
-                        loadUserPhoto(result.second!!.photo)
+                        Glide.with(requireContext()).clear(bnd.ivUserPhoto)
+                        loadUserPhotoWithCacheDisabled(result.second!!.photo)
+                        currentPhotoUrl = null
                         Snackbar.make(
                             bnd.btnUploadPhoto,
                             getString(R.string.photo_uploaded),
@@ -956,6 +960,22 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
 
         try {
+            binding?.let { bnd ->
+                val currentUser = PreferenceData.getInstance().getUser(context)
+                if (currentUser != null && currentUser.access.isNotEmpty()) {
+                    val userId = arguments?.getString("userId") ?: currentUser.uid
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val profileResult = DataRepository.getInstance(requireContext()).apiGetUserProfile(currentUser.access, userId)
+                        profileResult.second?.let { profile ->
+                            if (profile.photo.isNotEmpty()) {
+                                val cleanPhotoPath = profile.photo.replace("../", "")
+                                currentPhotoUrl = "https://upload.mcomputing.eu/$cleanPhotoPath"
+                            }
+                        }
+                    }
+                }
+            }
+            
             // Convert URI to File
             val inputStream = requireContext().contentResolver.openInputStream(uri)
             val tempFile = File(requireContext().cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
@@ -985,9 +1005,31 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         binding?.let { bnd ->
             if (photoPath.isNotEmpty()) {
                 val cleanPhotoPath = photoPath.replace("../", "")
-                val photoUrl = "https://upload.mcomputing.eu/$cleanPhotoPath"
+                val timestamp = System.currentTimeMillis()
+                val photoUrl = "https://upload.mcomputing.eu/$cleanPhotoPath?v=$timestamp"
                 Glide.with(this)
                     .load(photoUrl)
+                    .placeholder(R.drawable.profile_foreground)
+                    .error(R.drawable.profile_foreground)
+                    .circleCrop()
+                    .into(bnd.ivUserPhoto)
+            } else {
+                Glide.with(this).clear(bnd.ivUserPhoto)
+                bnd.ivUserPhoto.setImageResource(R.drawable.profile_foreground)
+            }
+        }
+    }
+
+    private fun loadUserPhotoWithCacheDisabled(photoPath: String) {
+        binding?.let { bnd ->
+            if (photoPath.isNotEmpty()) {
+                val cleanPhotoPath = photoPath.replace("../", "")
+                val timestamp = System.currentTimeMillis()
+                val photoUrl = "https://upload.mcomputing.eu/$cleanPhotoPath?v=$timestamp"
+                Glide.with(this)
+                    .load(photoUrl)
+                    .skipMemoryCache(true)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .placeholder(R.drawable.profile_foreground)
                     .error(R.drawable.profile_foreground)
                     .circleCrop()

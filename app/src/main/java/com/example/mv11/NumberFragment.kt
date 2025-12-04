@@ -20,23 +20,23 @@ class NumberFragment : Fragment(R.layout.fragment_number) {
             lifecycleOwner = viewLifecycleOwner
             this.viewModel = this@NumberFragment.viewModel
         }.also { bnd ->
-            viewModel.randomNumber.observe(viewLifecycleOwner) { number ->
+        viewModel.randomNumber.observe(viewLifecycleOwner) { number ->
                 bnd.textViewNumber.text = number.toString()
-            }
+        }
 
-            viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-                if (isLoading) {
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
                     bnd.textViewLoading.visibility = View.VISIBLE
                     bnd.buttonGenerate.isEnabled = false
-                } else {
+            } else {
                     bnd.textViewLoading.visibility = View.GONE
                     bnd.buttonGenerate.isEnabled = true
-                }
             }
+        }
 
             bnd.buttonGenerate.setOnClickListener {
-                viewModel.generateRandomNumber()
-            }
+            viewModel.generateRandomNumber()
+        }
         }
     }
 
