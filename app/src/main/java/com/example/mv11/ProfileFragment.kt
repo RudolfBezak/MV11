@@ -367,6 +367,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             bnd.radiusContainer.visibility = View.GONE
             bnd.btnUpdateRange.visibility = View.GONE
             
+            bnd.labelLastSeen.visibility = View.VISIBLE
+            bnd.tvLastSeen.visibility = View.VISIBLE
+            
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val currentDateTime = dateFormat.format(Calendar.getInstance().time)
+            bnd.tvLastSeen.text = currentDateTime
+            
             bnd.btnShowMap.visibility = View.VISIBLE
         } else if (currentUser != null) {
             bnd.textView.text = getString(R.string.your_profile)
@@ -913,6 +920,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                             bnd.labelEmail.visibility = View.GONE
                             bnd.tvUserEmail.visibility = View.GONE
                             bnd.tvUserUid.text = profile.id
+                            
+                            bnd.labelLastSeen.visibility = View.VISIBLE
+                            bnd.tvLastSeen.visibility = View.VISIBLE
+                            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                            val currentDateTime = dateFormat.format(Calendar.getInstance().time)
+                            bnd.tvLastSeen.text = currentDateTime
                         }
                     }
                 }

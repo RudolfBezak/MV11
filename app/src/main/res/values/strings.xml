@@ -108,6 +108,7 @@
     <string name="label_time_interval">Zdieľaj moju polohu v časoch:</string>
     <string name="label_time_from">od:</string>
     <string name="label_time_to">do:</string>
+    <string name="label_last_seen">Naposledy videný:</string>
     
     <!-- Notifications -->
     <string name="notification_channel_name">MOBV Zadanie</string>

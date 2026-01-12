@@ -431,6 +431,29 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp" />
 
+        <TextView
+            android:id="@+id/labelLastSeen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_last_seen"
+            style="@style/AppSubtitle"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvUserUid" />
+
+        <TextView
+            android:id="@+id/tvLastSeen"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:minHeight="56dp"
+            style="@style/ProfileInfoText"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/labelLastSeen"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShowMap"
             android:layout_width="0dp"
@@ -439,7 +462,7 @@
             style="@style/PrimaryButton"
             android:layout_marginTop="16dp"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@+id/tvUserUid"
+            app:layout_constraintTop_toBottomOf="@+id/tvLastSeen"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
